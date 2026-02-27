@@ -889,7 +889,7 @@ var GitSyncSettingTab = class extends import_obsidian2.PluginSettingTab {
       await this.plugin.commitAndPush();
     }));
     containerEl.createEl("h3", { text: "\u5E2E\u52A9" });
-    const helpDiv = containerEl.createDiv();
+    const helpDiv = containerEl.createDiv({ cls: "git-sync-help" });
     helpDiv.innerHTML = `
       <p>\u6B64\u63D2\u4EF6\u901A\u8FC7 Git \u540C\u6B65\u4F60\u7684\u5E93\u3002</p>
       <p><strong>\u524D\u7F6E\u6761\u4EF6\uFF1A</strong></p>

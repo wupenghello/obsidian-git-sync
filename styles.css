@@ -1,44 +1,114 @@
-/* obsidian-git-sync styles */
+/* obsidian-git-sync styles - Cyberpunk Tech Theme */
 
+/* ========================================
+   CSS Variables - Tech Theme
+======================================== */
+.git-sync-settings {
+  --git-sync-primary: #00d4ff;
+  --git-sync-secondary: #7c3aed;
+  --git-sync-success: #10b981;
+  --git-sync-warning: #f59e0b;
+  --git-sync-error: #ef4444;
+  --git-sync-bg-dark: rgba(15, 23, 42, 0.8);
+  --git-sync-border-glow: rgba(0, 212, 255, 0.3);
+  --git-sync-card-bg: linear-gradient(135deg, rgba(30, 41, 59, 0.9) 0%, rgba(15, 23, 42, 0.95) 100%);
+}
+
+/* ========================================
+   Status Bar Styles
+======================================== */
 .git-sync-status-bar {
   display: flex;
   align-items: center;
-  gap: 4px;
-  padding: 0 8px;
+  gap: 6px;
+  padding: 0 10px;
   cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.3s ease;
 }
 
 .git-sync-status-bar:hover {
   background-color: var(--background-modifier-hover);
+  box-shadow: 0 0 10px var(--git-sync-border-glow);
 }
 
 .git-sync-status-icon {
   display: flex;
   align-items: center;
+  transition: transform 0.3s ease;
+}
+
+.git-sync-status-bar:hover .git-sync-status-icon {
+  transform: scale(1.1);
 }
 
 .git-sync-status-text {
   font-size: 12px;
   color: var(--text-muted);
+  font-weight: 500;
+  letter-spacing: 0.5px;
+}
+
+.git-sync-status-bar.syncing .git-sync-status-icon {
+  animation: pulse-glow 1.5s ease-in-out infinite;
 }
 
 .git-sync-status-bar.syncing .git-sync-status-text {
-  color: var(--text-accent);
+  color: var(--git-sync-primary);
+  animation: text-flicker 2s ease-in-out infinite;
 }
 
 .git-sync-status-bar.error .git-sync-status-text {
-  color: var(--text-error);
+  color: var(--git-sync-error);
 }
 
 .git-sync-status-bar.success .git-sync-status-text {
-  color: var(--text-success);
+  color: var(--git-sync-success);
 }
 
 .git-sync-status-bar.conflict .git-sync-status-text {
-  color: var(--text-warning);
+  color: var(--git-sync-warning);
 }
 
-/* Settings styles */
+/* ========================================
+   Settings Page - Tech Theme
+======================================== */
+.git-sync-settings h2 {
+  background: linear-gradient(90deg, var(--git-sync-primary), var(--git-sync-secondary));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-size: 2em;
+  font-weight: 700;
+  margin-bottom: 24px;
+  position: relative;
+  padding-bottom: 16px;
+}
+
+.git-sync-settings h2::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg, var(--git-sync-primary), var(--git-sync-secondary), transparent);
+  animation: gradient-flow 3s linear infinite;
+  background-size: 200% 100%;
+}
+
+.git-sync-settings h3 {
+  color: var(--git-sync-primary);
+  font-size: 1.1em;
+  font-weight: 600;
+  margin-top: 32px;
+  margin-bottom: 16px;
+  padding-left: 12px;
+  border-left: 3px solid var(--git-sync-primary);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
 .git-sync-settings .setting-item-info {
   flex: 1;
 }
@@ -55,45 +125,405 @@
   resize: vertical;
 }
 
+/* ========================================
+   Status Container - Tech Card
+======================================== */
 .git-sync-settings .status-container {
-  padding: 12px;
-  margin: 12px 0;
-  border-radius: 8px;
-  background-color: var(--background-secondary);
+  padding: 20px;
+  margin: 16px 0;
+  border-radius: 12px;
+  background: var(--git-sync-card-bg);
+  border: 1px solid var(--git-sync-border-glow);
+  box-shadow:
+    0 4px 20px rgba(0, 0, 0, 0.3),
+    0 0 40px rgba(0, 212, 255, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  position: relative;
+  overflow: hidden;
+}
+
+.git-sync-settings .status-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(0, 212, 255, 0.1), transparent);
+  animation: scan-line 4s linear infinite;
+  pointer-events: none;
 }
 
 .git-sync-settings .status-container h4 {
   margin-top: 0;
-  margin-bottom: 8px;
+  margin-bottom: 16px;
+  color: var(--git-sync-primary);
+  font-size: 0.9em;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
+.git-sync-settings .status-container h4::before {
+  content: '◆';
+  animation: blink 1s ease-in-out infinite;
+}
+
+/* ========================================
+   Status Items
+======================================== */
 .git-sync-settings .status-item {
   display: flex;
   justify-content: space-between;
-  padding: 4px 0;
-  border-bottom: 1px solid var(--background-modifier-border);
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(100, 116, 139, 0.2);
+  transition: all 0.3s ease;
 }
 
 .git-sync-settings .status-item:last-child {
   border-bottom: none;
 }
 
+.git-sync-settings .status-item:hover {
+  background: rgba(0, 212, 255, 0.05);
+  padding-left: 8px;
+  margin-left: -8px;
+  margin-right: -8px;
+  padding-right: 8px;
+  border-radius: 4px;
+}
+
 .git-sync-settings .status-label {
   color: var(--text-muted);
+  font-size: 0.9em;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.git-sync-settings .status-label::before {
+  content: '›';
+  color: var(--git-sync-primary);
+  font-weight: bold;
 }
 
 .git-sync-settings .status-value {
-  font-weight: 500;
+  font-weight: 600;
+  font-size: 0.9em;
+  padding: 2px 10px;
+  border-radius: 4px;
+  background: rgba(100, 116, 139, 0.1);
+  transition: all 0.3s ease;
 }
 
 .git-sync-settings .status-value.success {
-  color: var(--text-success);
+  color: var(--git-sync-success);
+  background: rgba(16, 185, 129, 0.15);
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.2);
 }
 
 .git-sync-settings .status-value.error {
-  color: var(--text-error);
+  color: var(--git-sync-error);
+  background: rgba(239, 68, 68, 0.15);
+  box-shadow: 0 0 10px rgba(239, 68, 68, 0.2);
 }
 
 .git-sync-settings .status-value.warning {
-  color: var(--text-warning);
+  color: var(--git-sync-warning);
+  background: rgba(245, 158, 11, 0.15);
+  box-shadow: 0 0 10px rgba(245, 158, 11, 0.2);
+}
+
+/* ========================================
+   Buttons - Tech Style
+======================================== */
+.git-sync-settings .setting-item-control button {
+  background: linear-gradient(135deg, rgba(0, 212, 255, 0.2) 0%, rgba(124, 58, 237, 0.2) 100%);
+  border: 1px solid var(--git-sync-primary);
+  color: var(--git-sync-primary);
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-size: 0.8em;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.git-sync-settings .setting-item-control button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(0, 212, 255, 0.3), transparent);
+  transition: left 0.5s ease;
+}
+
+.git-sync-settings .setting-item-control button:hover {
+  background: linear-gradient(135deg, rgba(0, 212, 255, 0.4) 0%, rgba(124, 58, 237, 0.4) 100%);
+  box-shadow: 0 0 20px rgba(0, 212, 255, 0.4);
+  transform: translateY(-2px);
+}
+
+.git-sync-settings .setting-item-control button:hover::before {
+  left: 100%;
+}
+
+.git-sync-settings .setting-item-control button.mod-cta {
+  background: linear-gradient(135deg, var(--git-sync-primary) 0%, var(--git-sync-secondary) 100%);
+  color: white;
+  border: none;
+  box-shadow: 0 4px 15px rgba(0, 212, 255, 0.3);
+}
+
+.git-sync-settings .setting-item-control button.mod-cta:hover {
+  box-shadow: 0 6px 25px rgba(0, 212, 255, 0.5);
+}
+
+/* ========================================
+   Toggle Switch - Tech Style
+======================================== */
+.git-sync-settings .setting-item-control .checkbox-container {
+  background: rgba(100, 116, 139, 0.3);
+  border: 1px solid rgba(100, 116, 139, 0.5);
+  border-radius: 20px;
+  transition: all 0.3s ease;
+}
+
+.git-sync-settings .setting-item-control .checkbox-container.is-enabled {
+  background: linear-gradient(135deg, var(--git-sync-primary), var(--git-sync-secondary));
+  border-color: var(--git-sync-primary);
+  box-shadow: 0 0 15px rgba(0, 212, 255, 0.4);
+}
+
+.git-sync-settings .setting-item-control .checkbox-container::after {
+  background: white;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+}
+
+/* ========================================
+   Text Input - Tech Style
+======================================== */
+.git-sync-settings .setting-item-control input[type="text"] {
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid rgba(100, 116, 139, 0.3);
+  border-radius: 6px;
+  padding: 8px 12px;
+  color: var(--text-normal);
+  font-size: 0.9em;
+  transition: all 0.3s ease;
+}
+
+.git-sync-settings .setting-item-control input[type="text"]:focus {
+  border-color: var(--git-sync-primary);
+  box-shadow: 0 0 15px rgba(0, 212, 255, 0.3);
+  outline: none;
+}
+
+.git-sync-settings .setting-item-control input[type="text"]::placeholder {
+  color: var(--text-muted);
+}
+
+/* ========================================
+   Help Section - Tech Style
+======================================== */
+.git-sync-settings .git-sync-help {
+  padding: 20px;
+  margin-top: 20px;
+  border-radius: 12px;
+  background: var(--git-sync-card-bg);
+  border: 1px solid rgba(124, 58, 237, 0.3);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+.git-sync-settings .git-sync-help p {
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+
+.git-sync-settings .git-sync-help strong {
+  color: var(--git-sync-primary);
+}
+
+.git-sync-settings .git-sync-help ul,
+.git-sync-settings .git-sync-help ol {
+  padding-left: 20px;
+}
+
+.git-sync-settings .git-sync-help li {
+  color: var(--text-muted);
+  margin: 8px 0;
+  position: relative;
+}
+
+.git-sync-settings .git-sync-help ul li::marker {
+  color: var(--git-sync-primary);
+}
+
+.git-sync-settings .git-sync-help ol li::marker {
+  color: var(--git-sync-secondary);
+  font-weight: bold;
+}
+
+.git-sync-settings .git-sync-help code {
+  background: rgba(0, 212, 255, 0.1);
+  color: var(--git-sync-primary);
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 0.85em;
+  border: 1px solid rgba(0, 212, 255, 0.2);
+}
+
+/* ========================================
+   Setup Wizard Modal - Tech Theme
+======================================== */
+.setup-wizard-modal {
+  padding: 24px;
+}
+
+.setup-wizard-modal h2 {
+  background: linear-gradient(90deg, var(--git-sync-primary), var(--git-sync-secondary));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 20px;
+}
+
+.setup-wizard-modal h3 {
+  color: var(--git-sync-primary);
+  border-left: 3px solid var(--git-sync-primary);
+  padding-left: 12px;
+  margin: 20px 0;
+}
+
+.setup-success {
+  padding: 16px;
+  border-radius: 8px;
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  margin: 16px 0;
+}
+
+.setup-success p {
+  color: var(--git-sync-success);
+  margin: 0;
+}
+
+.setup-error {
+  padding: 16px;
+  border-radius: 8px;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  margin: 16px 0;
+}
+
+.setup-error p {
+  color: var(--git-sync-error);
+  margin: 0;
+}
+
+.setup-summary {
+  padding: 20px;
+  border-radius: 12px;
+  background: var(--git-sync-card-bg);
+  border: 1px solid var(--git-sync-border-glow);
+  margin: 16px 0;
+}
+
+.setup-summary .summary-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(100, 116, 139, 0.2);
+}
+
+.setup-summary .summary-item:last-child {
+  border-bottom: none;
+}
+
+.setup-summary .summary-label {
+  color: var(--text-muted);
+}
+
+.setup-summary .summary-value-success {
+  color: var(--git-sync-success);
+  font-weight: 600;
+}
+
+.setup-summary .summary-value-warning {
+  color: var(--git-sync-warning);
+  font-weight: 600;
+}
+
+/* ========================================
+   Animations
+======================================== */
+@keyframes pulse-glow {
+  0%, 100% {
+    filter: drop-shadow(0 0 5px var(--git-sync-primary));
+  }
+  50% {
+    filter: drop-shadow(0 0 15px var(--git-sync-primary));
+  }
+}
+
+@keyframes text-flicker {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+@keyframes gradient-flow {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 200% 50%;
+  }
+}
+
+@keyframes scan-line {
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+
+@keyframes blink {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+/* ========================================
+   Responsive Adjustments
+======================================== */
+@media (max-width: 768px) {
+  .git-sync-settings .status-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .git-sync-settings .status-value {
+    align-self: flex-end;
+  }
 }

@@ -176,7 +176,7 @@ export class GitSyncSettingTab extends PluginSettingTab {
     // 帮助
     containerEl.createEl('h3', { text: '帮助' });
 
-    const helpDiv = containerEl.createDiv();
+    const helpDiv = containerEl.createDiv({ cls: 'git-sync-help' });
     helpDiv.innerHTML = `
       <p>此插件通过 Git 同步你的库。</p>
       <p><strong>前置条件：</strong></p>
