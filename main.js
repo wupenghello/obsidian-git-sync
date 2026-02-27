@@ -27,7 +27,7 @@ __export(main_exports, {
   default: () => GitSyncPlugin
 });
 module.exports = __toCommonJS(main_exports);
-var import_obsidian3 = require("obsidian");
+var import_obsidian4 = require("obsidian");
 
 // src/git/executor.ts
 var import_child_process = require("child_process");
@@ -259,12 +259,12 @@ var GitExecutor = class {
       const branch = await this.getCurrentBranch();
       const remote = await this.getRemoteName();
       if (!remote) {
-        return { success: false, message: "No remote configured", pushed: 0 };
+        return { success: false, message: "\u672A\u914D\u7F6E\u8FDC\u7A0B\u4ED3\u5E93", pushed: 0 };
       }
       await this.run(`push ${remote} ${branch}`);
-      return { success: true, message: "Push successful", pushed: 1 };
+      return { success: true, message: "\u63A8\u9001\u6210\u529F", pushed: 1 };
     } catch (error) {
-      throw error;
+      return { success: false, message: this.parsePushError(error), pushed: 0 };
     }
   }
   /**
@@ -275,12 +275,12 @@ var GitExecutor = class {
       const branch = await this.getCurrentBranch();
       const remote = await this.getRemoteName();
       if (!remote) {
-        return { success: false, message: "No remote configured", pushed: 0 };
+        return { success: false, message: "\u672A\u914D\u7F6E\u8FDC\u7A0B\u4ED3\u5E93", pushed: 0 };
       }
       await this.run(`push -u ${remote} ${branch}`);
-      return { success: true, message: "Push successful", pushed: 1 };
+      return { success: true, message: "\u63A8\u9001\u6210\u529F", pushed: 1 };
     } catch (error) {
-      throw error;
+      return { success: false, message: this.parsePushError(error), pushed: 0 };
     }
   }
   /**
@@ -382,6 +382,66 @@ var GitExecutor = class {
     } catch (e) {
       return null;
     }
+  }
+  /**
+   * 检查远程仓库是否存在
+   */
+  async hasRemote(name = "origin") {
+    try {
+      const result = await this.run("remote");
+      const remotes = result.stdout.trim().split("\n").filter(Boolean);
+      return remotes.includes(name);
+    } catch (e) {
+      return false;
+    }
+  }
+  /**
+   * 添加远程仓库
+   */
+  async addRemote(name, url) {
+    await this.run(`remote add ${name} "${url}"`);
+  }
+  /**
+   * 设置远程仓库 URL
+   */
+  async setRemoteUrl(name, url) {
+    await this.run(`remote set-url ${name} "${url}"`);
+  }
+  /**
+   * 获取凭证助手配置
+   */
+  async getCredentialHelper() {
+    try {
+      const result = await this.run("config --global credential.helper");
+      return result.stdout.trim() || null;
+    } catch (e) {
+      return null;
+    }
+  }
+  /**
+   * 解析推送错误信息
+   */
+  parsePushError(error) {
+    const stderr = error.stderr || "";
+    if (stderr.includes("Authentication failed") || stderr.includes("403") || stderr.includes("fatal: unable to access")) {
+      return "\u8BA4\u8BC1\u5931\u8D25\uFF1AHTTPS \u63A8\u9001\u9700\u8981\u914D\u7F6E\u51ED\u8BC1\u3002\u8BF7\u5728\u7EC8\u7AEF\u8FD0\u884C: git config --global credential.helper store\uFF0C\u7136\u540E\u624B\u52A8\u6267\u884C\u4E00\u6B21 git push \u8F93\u5165\u7528\u6237\u540D\u548C Personal Access Token";
+    }
+    if (stderr.includes("Permission denied (publickey)")) {
+      return "SSH \u8BA4\u8BC1\u5931\u8D25\uFF1A\u8BF7\u68C0\u67E5 SSH \u5BC6\u94A5\u662F\u5426\u5DF2\u6DFB\u52A0\u5230 GitHub/GitLab";
+    }
+    if (stderr.includes("Permission to") && stderr.includes("denied")) {
+      return "\u65E0\u63A8\u9001\u6743\u9650\uFF1A\u8BF7\u68C0\u67E5\u662F\u5426\u6709\u4ED3\u5E93\u5199\u5165\u6743\u9650";
+    }
+    if (stderr.includes("Could not resolve host")) {
+      return "\u7F51\u7EDC\u9519\u8BEF\uFF1A\u65E0\u6CD5\u89E3\u6790\u8FDC\u7A0B\u4E3B\u673A";
+    }
+    if (stderr.includes("fatal:")) {
+      const fatalLine = stderr.split("\n").find((line) => line.includes("fatal:"));
+      if (fatalLine) {
+        return fatalLine.replace("fatal: ", "").trim();
+      }
+    }
+    return "\u63A8\u9001\u5931\u8D25\uFF0C\u8BF7\u68C0\u67E5\u7F51\u7EDC\u548C\u51ED\u8BC1\u914D\u7F6E";
   }
 };
 
@@ -839,6 +899,13 @@ var GitSyncSettingTab = class extends import_obsidian2.PluginSettingTab {
         <li>\u5DF2\u914D\u7F6E\u8FDC\u7A0B\u4ED3\u5E93 (git remote add origin &lt;url&gt;)</li>
         <li>\u5DF2\u914D\u7F6E Git \u51ED\u8BC1</li>
       </ul>
+      <p><strong>HTTPS \u51ED\u8BC1\u914D\u7F6E\u6B65\u9AA4\uFF1A</strong></p>
+      <ol>
+        <li>\u5728 GitHub \u521B\u5EFA Personal Access Token\uFF08Settings \u2192 Developer settings \u2192 Personal access tokens \u2192 Tokens (classic)\uFF09</li>
+        <li>\u5728\u7EC8\u7AEF\u8FD0\u884C: <code>git config --global credential.helper store</code></li>
+        <li>\u624B\u52A8\u6267\u884C\u4E00\u6B21 <code>git push</code>\uFF0C\u8F93\u5165\u7528\u6237\u540D\u548C Token\uFF08Token \u4F5C\u4E3A\u5BC6\u7801\uFF09</li>
+        <li>\u4E4B\u540E\u63D2\u4EF6\u63A8\u9001\u5C06\u81EA\u52A8\u4F7F\u7528\u5B58\u50A8\u7684\u51ED\u8BC1</li>
+      </ol>
       <p><strong>\u6CE8\u610F\uFF1A</strong>\u6B64\u63D2\u4EF6\u4EC5\u652F\u6301\u684C\u9762\u7AEF\uFF08Windows\u3001macOS\u3001Linux\uFF09\u3002</p>
     `;
   }
@@ -874,6 +941,30 @@ var GitSyncSettingTab = class extends import_obsidian2.PluginSettingTab {
           value: status.clean ? "\u65E0" : `${status.staged.length + status.modified.length + status.untracked.length} \u4E2A\u6587\u4EF6`,
           status: status.clean ? "success" : "warning"
         });
+        const remoteUrl = await this.plugin.getRemoteUrl();
+        items.push({
+          label: "\u8FDC\u7A0B\u4ED3\u5E93",
+          value: remoteUrl || "\u672A\u914D\u7F6E",
+          status: remoteUrl ? "success" : "warning"
+        });
+        const userName = await this.plugin.getUserName();
+        const userEmail = await this.plugin.getUserEmail();
+        items.push({
+          label: "\u7528\u6237\u540D",
+          value: userName || "\u672A\u914D\u7F6E",
+          status: userName ? "success" : "warning"
+        });
+        items.push({
+          label: "\u90AE\u7BB1",
+          value: userEmail || "\u672A\u914D\u7F6E",
+          status: userEmail ? "success" : "warning"
+        });
+        const credentialHelper = await this.plugin.getCredentialHelper();
+        items.push({
+          label: "\u51ED\u8BC1\u52A9\u624B",
+          value: credentialHelper || "\u672A\u914D\u7F6E",
+          status: credentialHelper ? "success" : "warning"
+        });
       } catch (error) {
         items.push({
           label: "\u72B6\u6001",
@@ -887,11 +978,334 @@ var GitSyncSettingTab = class extends import_obsidian2.PluginSettingTab {
       itemEl.createSpan({ cls: "status-label", text: item.label });
       itemEl.createSpan({ cls: `status-value ${item.status}`, text: item.value });
     }
+    new import_obsidian2.Setting(container).setName("\u914D\u7F6E\u5411\u5BFC").setDesc("\u6253\u5F00 Git \u914D\u7F6E\u5411\u5BFC\uFF0C\u5F15\u5BFC\u5B8C\u6210\u4ED3\u5E93\u521D\u59CB\u5316\u548C\u914D\u7F6E").addButton((button) => button.setButtonText("\u6253\u5F00\u914D\u7F6E\u5411\u5BFC").setCta().onClick(() => {
+      this.plugin.openSetupWizard();
+    }));
+  }
+};
+
+// src/ui/setup-wizard-modal.ts
+var import_obsidian3 = require("obsidian");
+var SetupWizardModal = class extends import_obsidian3.Modal {
+  constructor(app, plugin) {
+    super(app);
+    this.currentStep = "checkGit";
+    this.remoteUrl = "";
+    this.userName = "";
+    this.userEmail = "";
+    this.githubUsername = "";
+    this.githubToken = "";
+    this.existingRemoteUrl = null;
+    this.existingUserName = null;
+    this.existingUserEmail = null;
+    this.plugin = plugin;
+  }
+  onOpen() {
+    this.renderCurrentStep();
+  }
+  onClose() {
+    const { contentEl } = this;
+    contentEl.empty();
+  }
+  /**
+   * 渲染当前步骤
+   */
+  renderCurrentStep() {
+    const { contentEl } = this;
+    contentEl.empty();
+    switch (this.currentStep) {
+      case "checkGit":
+        this.renderCheckGitStep();
+        break;
+      case "initRepo":
+        this.renderInitRepoStep();
+        break;
+      case "configRemote":
+        this.renderConfigRemoteStep();
+        break;
+      case "configUser":
+        this.renderConfigUserStep();
+        break;
+      case "configCredential":
+        this.renderConfigCredentialStep();
+        break;
+      case "done":
+        this.renderDoneStep();
+        break;
+    }
+  }
+  /**
+   * 步骤 1: 检查 Git
+   */
+  async renderCheckGitStep() {
+    const { contentEl } = this;
+    contentEl.createEl("h2", { text: "Git \u4ED3\u5E93\u914D\u7F6E\u5411\u5BFC" });
+    contentEl.createEl("p", { text: "\u6B63\u5728\u68C0\u67E5 Git \u73AF\u5883..." });
+    const gitAvailable = await this.plugin.isGitAvailable();
+    if (gitAvailable) {
+      contentEl.empty();
+      contentEl.createEl("h2", { text: "Git \u4ED3\u5E93\u914D\u7F6E\u5411\u5BFC" });
+      const successDiv = contentEl.createDiv({ cls: "setup-success" });
+      successDiv.createEl("p", { text: "\u2713 Git \u5DF2\u5B89\u88C5\u5E76\u53EF\u7528" });
+      contentEl.createEl("p", { text: '\u70B9\u51FB"\u4E0B\u4E00\u6B65"\u7EE7\u7EED\u914D\u7F6E\u4ED3\u5E93\u3002' });
+      new import_obsidian3.Setting(contentEl).addButton((button) => button.setButtonText("\u4E0B\u4E00\u6B65").setCta().onClick(() => {
+        this.currentStep = "initRepo";
+        this.renderCurrentStep();
+      }));
+    } else {
+      contentEl.empty();
+      contentEl.createEl("h2", { text: "Git \u4ED3\u5E93\u914D\u7F6E\u5411\u5BFC" });
+      const errorDiv = contentEl.createDiv({ cls: "setup-error" });
+      errorDiv.createEl("p", { text: "\u2717 Git \u672A\u5B89\u88C5\u6216\u672A\u627E\u5230" });
+      errorDiv.createEl("p", { text: "\u8BF7\u5148\u5B89\u88C5 Git\uFF0C\u7136\u540E\u91CD\u65B0\u6253\u5F00\u6B64\u5411\u5BFC\u3002" });
+      new import_obsidian3.Setting(contentEl).addButton((button) => button.setButtonText("\u5173\u95ED").onClick(() => this.close()));
+    }
+  }
+  /**
+   * 步骤 2: 初始化仓库
+   */
+  async renderInitRepoStep() {
+    const { contentEl } = this;
+    contentEl.createEl("h2", { text: "Git \u4ED3\u5E93\u914D\u7F6E\u5411\u5BFC" });
+    contentEl.createEl("h3", { text: "\u6B65\u9AA4 1/4: \u521D\u59CB\u5316\u4ED3\u5E93" });
+    const isRepo = await this.plugin.isRepo();
+    if (isRepo) {
+      contentEl.createEl("p", { text: "\u2713 \u5F53\u524D\u5E93\u5DF2\u7ECF\u662F Git \u4ED3\u5E93" });
+      new import_obsidian3.Setting(contentEl).addButton((button) => button.setButtonText("\u4E0A\u4E00\u6B65").onClick(() => {
+        this.currentStep = "checkGit";
+        this.renderCurrentStep();
+      })).addButton((button) => button.setButtonText("\u4E0B\u4E00\u6B65").setCta().onClick(() => {
+        this.currentStep = "configRemote";
+        this.renderCurrentStep();
+      }));
+    } else {
+      contentEl.createEl("p", { text: '\u5F53\u524D\u5E93\u8FD8\u4E0D\u662F Git \u4ED3\u5E93\u3002\u70B9\u51FB"\u521D\u59CB\u5316"\u521B\u5EFA\u65B0\u4ED3\u5E93\u3002' });
+      new import_obsidian3.Setting(contentEl).addButton((button) => button.setButtonText("\u4E0A\u4E00\u6B65").onClick(() => {
+        this.currentStep = "checkGit";
+        this.renderCurrentStep();
+      })).addButton((button) => button.setButtonText("\u521D\u59CB\u5316").setCta().onClick(async () => {
+        try {
+          await this.plugin.initRepo();
+          new import_obsidian3.Notice("Git \u4ED3\u5E93\u5DF2\u521D\u59CB\u5316");
+          this.currentStep = "configRemote";
+          this.renderCurrentStep();
+        } catch (error) {
+          new import_obsidian3.Notice(`\u521D\u59CB\u5316\u5931\u8D25: ${error.message}`);
+        }
+      }));
+    }
+  }
+  /**
+   * 步骤 3: 配置远程仓库
+   */
+  async renderConfigRemoteStep() {
+    const { contentEl } = this;
+    this.existingRemoteUrl = await this.plugin.getRemoteUrl();
+    contentEl.createEl("h2", { text: "Git \u4ED3\u5E93\u914D\u7F6E\u5411\u5BFC" });
+    contentEl.createEl("h3", { text: "\u6B65\u9AA4 2/4: \u914D\u7F6E\u8FDC\u7A0B\u4ED3\u5E93" });
+    if (this.existingRemoteUrl) {
+      contentEl.createEl("p", { text: `\u5F53\u524D\u8FDC\u7A0B\u4ED3\u5E93: ${this.existingRemoteUrl}` });
+    }
+    contentEl.createEl("p", { text: "\u8F93\u5165\u8FDC\u7A0B\u4ED3\u5E93 URL\uFF08\u5982 GitHub\u3001GitLab \u4ED3\u5E93\u5730\u5740\uFF09" });
+    new import_obsidian3.Setting(contentEl).setName("\u8FDC\u7A0B\u4ED3\u5E93 URL").setDesc("\u4F8B\u5982: https://github.com/username/repo.git \u6216 git@github.com:username/repo.git").addText((text) => text.setPlaceholder("https://github.com/username/repo.git").setValue(this.existingRemoteUrl || "").onChange((value) => {
+      this.remoteUrl = value.trim();
+    }));
+    new import_obsidian3.Setting(contentEl).addButton((button) => button.setButtonText("\u4E0A\u4E00\u6B65").onClick(() => {
+      this.currentStep = "initRepo";
+      this.renderCurrentStep();
+    })).addButton((button) => button.setButtonText("\u8DF3\u8FC7").onClick(() => {
+      this.currentStep = "configUser";
+      this.renderCurrentStep();
+    })).addButton((button) => button.setButtonText("\u4E0B\u4E00\u6B65").setCta().onClick(async () => {
+      if (this.remoteUrl) {
+        try {
+          const hasOrigin = await this.plugin.hasRemote("origin");
+          if (hasOrigin) {
+            await this.plugin.setRemoteUrl("origin", this.remoteUrl);
+          } else {
+            await this.plugin.addRemote("origin", this.remoteUrl);
+          }
+          new import_obsidian3.Notice("\u8FDC\u7A0B\u4ED3\u5E93\u5DF2\u914D\u7F6E");
+        } catch (error) {
+          new import_obsidian3.Notice(`\u914D\u7F6E\u8FDC\u7A0B\u4ED3\u5E93\u5931\u8D25: ${error.message}`);
+          return;
+        }
+      }
+      this.currentStep = "configUser";
+      this.renderCurrentStep();
+    }));
+  }
+  /**
+   * 步骤 4: 配置用户信息
+   */
+  async renderConfigUserStep() {
+    const { contentEl } = this;
+    this.existingUserName = await this.plugin.getUserName();
+    this.existingUserEmail = await this.plugin.getUserEmail();
+    contentEl.createEl("h2", { text: "Git \u4ED3\u5E93\u914D\u7F6E\u5411\u5BFC" });
+    contentEl.createEl("h3", { text: "\u6B65\u9AA4 3/4: \u914D\u7F6E\u7528\u6237\u4FE1\u606F" });
+    contentEl.createEl("p", { text: "\u914D\u7F6E Git \u63D0\u4EA4\u8005\u4FE1\u606F\uFF08\u7528\u4E8E\u6807\u8BC6\u63D0\u4EA4\u8BB0\u5F55\uFF09" });
+    new import_obsidian3.Setting(contentEl).setName("\u7528\u6237\u540D").setDesc("\u63D0\u4EA4\u8BB0\u5F55\u4E2D\u663E\u793A\u7684\u540D\u79F0").addText((text) => text.setPlaceholder("Your Name").setValue(this.existingUserName || "").onChange((value) => {
+      this.userName = value.trim();
+    }));
+    new import_obsidian3.Setting(contentEl).setName("\u90AE\u7BB1").setDesc("\u63D0\u4EA4\u8BB0\u5F55\u4E2D\u663E\u793A\u7684\u90AE\u7BB1").addText((text) => text.setPlaceholder("your.email@example.com").setValue(this.existingUserEmail || "").onChange((value) => {
+      this.userEmail = value.trim();
+    }));
+    new import_obsidian3.Setting(contentEl).addButton((button) => button.setButtonText("\u4E0A\u4E00\u6B65").onClick(() => {
+      this.currentStep = "configRemote";
+      this.renderCurrentStep();
+    })).addButton((button) => button.setButtonText("\u8DF3\u8FC7").onClick(() => {
+      this.currentStep = "configCredential";
+      this.renderCurrentStep();
+    })).addButton((button) => button.setButtonText("\u4E0B\u4E00\u6B65").setCta().onClick(async () => {
+      try {
+        if (this.userName) {
+          await this.plugin.setUserName(this.userName);
+        }
+        if (this.userEmail) {
+          await this.plugin.setUserEmail(this.userEmail);
+        }
+        if (this.userName || this.userEmail) {
+          new import_obsidian3.Notice("\u7528\u6237\u4FE1\u606F\u5DF2\u914D\u7F6E");
+        }
+        this.currentStep = "configCredential";
+        this.renderCurrentStep();
+      } catch (error) {
+        new import_obsidian3.Notice(`\u914D\u7F6E\u7528\u6237\u4FE1\u606F\u5931\u8D25: ${error.message}`);
+      }
+    }));
+  }
+  /**
+   * 步骤 5: 配置凭证
+   */
+  async renderConfigCredentialStep() {
+    const { contentEl } = this;
+    const remoteUrl = await this.plugin.getRemoteUrl();
+    const isHttps = (remoteUrl == null ? void 0 : remoteUrl.startsWith("https://")) || (remoteUrl == null ? void 0 : remoteUrl.startsWith("http://"));
+    contentEl.createEl("h2", { text: "Git \u4ED3\u5E93\u914D\u7F6E\u5411\u5BFC" });
+    contentEl.createEl("h3", { text: "\u6B65\u9AA4 4/4: \u914D\u7F6E\u51ED\u8BC1" });
+    if (!remoteUrl) {
+      contentEl.createEl("p", { text: "\u672A\u914D\u7F6E\u8FDC\u7A0B\u4ED3\u5E93\uFF0C\u8DF3\u8FC7\u51ED\u8BC1\u914D\u7F6E\u3002" });
+      new import_obsidian3.Setting(contentEl).addButton((button) => button.setButtonText("\u5B8C\u6210").setCta().onClick(() => {
+        this.currentStep = "done";
+        this.renderCurrentStep();
+      }));
+      return;
+    }
+    if (!isHttps) {
+      contentEl.createEl("p", { text: "\u68C0\u6D4B\u5230 SSH \u8FDC\u7A0B\u4ED3\u5E93\u3002" });
+      contentEl.createEl("p", { text: "SSH \u65B9\u5F0F\u9700\u8981\u914D\u7F6E SSH \u5BC6\u94A5\u3002\u8BF7\u786E\u4FDD\u5DF2\u5C06\u516C\u94A5\u6DFB\u52A0\u5230 GitHub/GitLab\u3002" });
+      new import_obsidian3.Setting(contentEl).addButton((button) => button.setButtonText("\u4E0A\u4E00\u6B65").onClick(() => {
+        this.currentStep = "configUser";
+        this.renderCurrentStep();
+      })).addButton((button) => button.setButtonText("\u5B8C\u6210").setCta().onClick(() => {
+        this.currentStep = "done";
+        this.renderCurrentStep();
+      }));
+      return;
+    }
+    contentEl.createEl("p", { text: "\u68C0\u6D4B\u5230 HTTPS \u8FDC\u7A0B\u4ED3\u5E93\uFF0C\u9700\u8981\u914D\u7F6E\u51ED\u8BC1\u624D\u80FD\u63A8\u9001\u3002" });
+    const helpDiv = contentEl.createDiv();
+    helpDiv.innerHTML = `
+      <p><strong>\u5982\u4F55\u83B7\u53D6 GitHub Personal Access Token\uFF1A</strong></p>
+      <ol>
+        <li>\u8BBF\u95EE GitHub \u2192 Settings \u2192 Developer settings \u2192 Personal access tokens \u2192 Tokens (classic)</li>
+        <li>\u70B9\u51FB "Generate new token (classic)"</li>
+        <li>\u52FE\u9009 <code>repo</code> \u6743\u9650</li>
+        <li>\u751F\u6210\u5E76\u590D\u5236 Token</li>
+      </ol>
+    `;
+    new import_obsidian3.Setting(contentEl).setName("GitHub \u7528\u6237\u540D").setDesc("\u4F60\u7684 GitHub \u7528\u6237\u540D").addText((text) => text.setPlaceholder("username").onChange((value) => {
+      this.githubUsername = value.trim();
+    }));
+    new import_obsidian3.Setting(contentEl).setName("Personal Access Token").setDesc("GitHub Personal Access Token\uFF08\u4E0D\u662F\u8D26\u6237\u5BC6\u7801\uFF09").addText((text) => text.setPlaceholder("ghp_xxxxxxxxxxxx").onChange((value) => {
+      this.githubToken = value.trim();
+    }));
+    new import_obsidian3.Setting(contentEl).addButton((button) => button.setButtonText("\u4E0A\u4E00\u6B65").onClick(() => {
+      this.currentStep = "configUser";
+      this.renderCurrentStep();
+    })).addButton((button) => button.setButtonText("\u8DF3\u8FC7").onClick(() => {
+      this.currentStep = "done";
+      this.renderCurrentStep();
+    })).addButton((button) => button.setButtonText("\u4FDD\u5B58\u51ED\u8BC1").setCta().onClick(async () => {
+      if (!this.githubUsername || !this.githubToken) {
+        new import_obsidian3.Notice("\u8BF7\u586B\u5199\u7528\u6237\u540D\u548C Token");
+        return;
+      }
+      try {
+        await this.saveCredential(this.githubUsername, this.githubToken, remoteUrl);
+        new import_obsidian3.Notice("\u51ED\u8BC1\u5DF2\u4FDD\u5B58");
+        this.currentStep = "done";
+        this.renderCurrentStep();
+      } catch (error) {
+        new import_obsidian3.Notice(`\u4FDD\u5B58\u51ED\u8BC1\u5931\u8D25: ${error.message}`);
+      }
+    }));
+  }
+  /**
+   * 保存凭证到 Git credential store
+   */
+  async saveCredential(username, token, remoteUrl) {
+    const vaultPath = this.plugin.getVaultPath();
+    const url = new URL(remoteUrl);
+    const protocol = url.protocol.replace(":", "");
+    const host = url.host;
+    const credentialInput = `protocol=${protocol}
+host=${host}
+username=${username}
+password=${token}
+`;
+    const { exec: exec2 } = require("child_process");
+    const { promisify: promisify2 } = require("util");
+    const execAsync2 = promisify2(exec2);
+    await execAsync2("git config --global credential.helper store");
+    await new Promise((resolve, reject) => {
+      var _a, _b;
+      const child = exec2("git credential approve", { cwd: vaultPath }, (error) => {
+        if (error)
+          reject(error);
+        else
+          resolve(void 0);
+      });
+      (_a = child.stdin) == null ? void 0 : _a.write(credentialInput);
+      (_b = child.stdin) == null ? void 0 : _b.end();
+    });
+  }
+  /**
+   * 步骤 6: 完成
+   */
+  async renderDoneStep() {
+    const { contentEl } = this;
+    contentEl.createEl("h2", { text: "Git \u4ED3\u5E93\u914D\u7F6E\u5411\u5BFC" });
+    contentEl.createEl("h3", { text: "\u914D\u7F6E\u5B8C\u6210!" });
+    const summaryDiv = contentEl.createDiv({ cls: "setup-summary" });
+    const isRepo = await this.plugin.isRepo();
+    const remoteUrl = await this.plugin.getRemoteUrl();
+    const userName = await this.plugin.getUserName();
+    const userEmail = await this.plugin.getUserEmail();
+    const credentialHelper = await this.plugin.getCredentialHelper();
+    const items = [
+      { label: "Git \u4ED3\u5E93", value: isRepo ? "\u5DF2\u521D\u59CB\u5316" : "\u672A\u521D\u59CB\u5316", success: isRepo },
+      { label: "\u8FDC\u7A0B\u4ED3\u5E93", value: remoteUrl || "\u672A\u914D\u7F6E", success: !!remoteUrl },
+      { label: "\u7528\u6237\u540D", value: userName || "\u672A\u914D\u7F6E", success: !!userName },
+      { label: "\u90AE\u7BB1", value: userEmail || "\u672A\u914D\u7F6E", success: !!userEmail },
+      { label: "\u51ED\u8BC1\u52A9\u624B", value: credentialHelper || "\u672A\u914D\u7F6E", success: !!credentialHelper }
+    ];
+    for (const item of items) {
+      const itemEl = summaryDiv.createDiv({ cls: "summary-item" });
+      itemEl.createSpan({ cls: "summary-label", text: `${item.label}: ` });
+      itemEl.createSpan({
+        cls: item.success ? "summary-value-success" : "summary-value-warning",
+        text: item.value
+      });
+    }
+    contentEl.createEl("p", { text: "\u73B0\u5728\u53EF\u4EE5\u4F7F\u7528 Git \u540C\u6B65\u529F\u80FD\u4E86\u3002" });
+    new import_obsidian3.Setting(contentEl).addButton((button) => button.setButtonText("\u5173\u95ED").setCta().onClick(() => this.close()));
   }
 };
 
 // main.ts
-var GitSyncPlugin = class extends import_obsidian3.Plugin {
+var GitSyncPlugin = class extends import_obsidian4.Plugin {
   async onload() {
     console.log("\u52A0\u8F7D Git \u540C\u6B65\u63D2\u4EF6");
     await this.loadSettings();
@@ -958,8 +1372,8 @@ var GitSyncPlugin = class extends import_obsidian3.Plugin {
     });
     this.addCommand({
       id: "git-init",
-      name: "\u521D\u59CB\u5316\u4ED3\u5E93",
-      callback: () => this.initRepo()
+      name: "\u914D\u7F6E Git \u4ED3\u5E93",
+      callback: () => this.openSetupWizard()
     });
   }
   /**
@@ -1117,9 +1531,69 @@ var GitSyncPlugin = class extends import_obsidian3.Plugin {
       return;
     }
     if (isError) {
-      new import_obsidian3.Notice(`Git \u540C\u6B65: ${message}`, 5e3);
+      new import_obsidian4.Notice(`Git \u540C\u6B65: ${message}`, 5e3);
     } else {
-      new import_obsidian3.Notice(`Git \u540C\u6B65: ${message}`);
+      new import_obsidian4.Notice(`Git \u540C\u6B65: ${message}`);
     }
+  }
+  /**
+   * 打开配置向导
+   */
+  openSetupWizard() {
+    new SetupWizardModal(this.app, this).open();
+  }
+  /**
+   * 获取远程仓库 URL
+   */
+  async getRemoteUrl() {
+    return await this.git.getRemoteUrl();
+  }
+  /**
+   * 检查远程仓库是否存在
+   */
+  async hasRemote(name = "origin") {
+    return await this.git.hasRemote(name);
+  }
+  /**
+   * 添加远程仓库
+   */
+  async addRemote(name, url) {
+    await this.git.addRemote(name, url);
+  }
+  /**
+   * 设置远程仓库 URL
+   */
+  async setRemoteUrl(name, url) {
+    await this.git.setRemoteUrl(name, url);
+  }
+  /**
+   * 获取凭证助手配置
+   */
+  async getCredentialHelper() {
+    return await this.git.getCredentialHelper();
+  }
+  /**
+   * 获取 Git 用户名
+   */
+  async getUserName() {
+    return await this.git.getUserName();
+  }
+  /**
+   * 获取 Git 用户邮箱
+   */
+  async getUserEmail() {
+    return await this.git.getUserEmail();
+  }
+  /**
+   * 设置 Git 用户名
+   */
+  async setUserName(name) {
+    await this.git.setUserName(name);
+  }
+  /**
+   * 设置 Git 用户邮箱
+   */
+  async setUserEmail(email) {
+    await this.git.setUserEmail(email);
   }
 };

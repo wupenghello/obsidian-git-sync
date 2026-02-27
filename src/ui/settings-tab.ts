@@ -186,6 +186,13 @@ export class GitSyncSettingTab extends PluginSettingTab {
         <li>已配置远程仓库 (git remote add origin &lt;url&gt;)</li>
         <li>已配置 Git 凭证</li>
       </ul>
+      <p><strong>HTTPS 凭证配置步骤：</strong></p>
+      <ol>
+        <li>在 GitHub 创建 Personal Access Token（Settings → Developer settings → Personal access tokens → Tokens (classic)）</li>
+        <li>在终端运行: <code>git config --global credential.helper store</code></li>
+        <li>手动执行一次 <code>git push</code>，输入用户名和 Token（Token 作为密码）</li>
+        <li>之后插件推送将自动使用存储的凭证</li>
+      </ol>
       <p><strong>注意：</strong>此插件仅支持桌面端（Windows、macOS、Linux）。</p>
     `;
   }
@@ -227,6 +234,36 @@ export class GitSyncSettingTab extends PluginSettingTab {
           value: status.clean ? '无' : `${status.staged.length + status.modified.length + status.untracked.length} 个文件`,
           status: status.clean ? 'success' : 'warning'
         });
+
+        // 获取远程仓库 URL
+        const remoteUrl = await this.plugin.getRemoteUrl();
+        items.push({
+          label: '远程仓库',
+          value: remoteUrl || '未配置',
+          status: remoteUrl ? 'success' : 'warning'
+        });
+
+        // 获取用户信息
+        const userName = await this.plugin.getUserName();
+        const userEmail = await this.plugin.getUserEmail();
+        items.push({
+          label: '用户名',
+          value: userName || '未配置',
+          status: userName ? 'success' : 'warning'
+        });
+        items.push({
+          label: '邮箱',
+          value: userEmail || '未配置',
+          status: userEmail ? 'success' : 'warning'
+        });
+
+        // 获取凭证助手配置
+        const credentialHelper = await this.plugin.getCredentialHelper();
+        items.push({
+          label: '凭证助手',
+          value: credentialHelper || '未配置',
+          status: credentialHelper ? 'success' : 'warning'
+        });
       } catch (error) {
         items.push({
           label: '状态',
@@ -241,5 +278,16 @@ export class GitSyncSettingTab extends PluginSettingTab {
       itemEl.createSpan({ cls: 'status-label', text: item.label });
       itemEl.createSpan({ cls: `status-value ${item.status}`, text: item.value });
     }
+
+    // 添加配置向导按钮
+    new Setting(container)
+      .setName('配置向导')
+      .setDesc('打开 Git 配置向导，引导完成仓库初始化和配置')
+      .addButton(button => button
+        .setButtonText('打开配置向导')
+        .setCta()
+        .onClick(() => {
+          this.plugin.openSetupWizard();
+        }));
   }
 }

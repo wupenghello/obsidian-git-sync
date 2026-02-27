@@ -282,13 +282,13 @@ export class GitExecutor {
       const remote = await this.getRemoteName();
 
       if (!remote) {
-        return { success: false, message: 'No remote configured', pushed: 0 };
+        return { success: false, message: '未配置远程仓库', pushed: 0 };
       }
 
       await this.run(`push ${remote} ${branch}`);
-      return { success: true, message: 'Push successful', pushed: 1 };
+      return { success: true, message: '推送成功', pushed: 1 };
     } catch (error: any) {
-      throw error;
+      return { success: false, message: this.parsePushError(error), pushed: 0 };
     }
   }
 
@@ -301,13 +301,13 @@ export class GitExecutor {
       const remote = await this.getRemoteName();
 
       if (!remote) {
-        return { success: false, message: 'No remote configured', pushed: 0 };
+        return { success: false, message: '未配置远程仓库', pushed: 0 };
       }
 
       await this.run(`push -u ${remote} ${branch}`);
-      return { success: true, message: 'Push successful', pushed: 1 };
+      return { success: true, message: '推送成功', pushed: 1 };
     } catch (error: any) {
-      throw error;
+      return { success: false, message: this.parsePushError(error), pushed: 0 };
     }
   }
 
@@ -423,5 +423,83 @@ export class GitExecutor {
     } catch {
       return null;
     }
+  }
+
+  /**
+   * 检查远程仓库是否存在
+   */
+  async hasRemote(name: string = 'origin'): Promise<boolean> {
+    try {
+      const result = await this.run('remote');
+      const remotes = result.stdout.trim().split('\n').filter(Boolean);
+      return remotes.includes(name);
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * 添加远程仓库
+   */
+  async addRemote(name: string, url: string): Promise<void> {
+    await this.run(`remote add ${name} "${url}"`);
+  }
+
+  /**
+   * 设置远程仓库 URL
+   */
+  async setRemoteUrl(name: string, url: string): Promise<void> {
+    await this.run(`remote set-url ${name} "${url}"`);
+  }
+
+  /**
+   * 获取凭证助手配置
+   */
+  async getCredentialHelper(): Promise<string | null> {
+    try {
+      const result = await this.run('config --global credential.helper');
+      return result.stdout.trim() || null;
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * 解析推送错误信息
+   */
+  private parsePushError(error: GitError): string {
+    const stderr = error.stderr || '';
+
+    // HTTPS 认证错误
+    if (stderr.includes('Authentication failed') ||
+        stderr.includes('403') ||
+        stderr.includes('fatal: unable to access')) {
+      return '认证失败：HTTPS 推送需要配置凭证。请在终端运行: git config --global credential.helper store，然后手动执行一次 git push 输入用户名和 Personal Access Token';
+    }
+
+    // SSH 认证错误
+    if (stderr.includes('Permission denied (publickey)')) {
+      return 'SSH 认证失败：请检查 SSH 密钥是否已添加到 GitHub/GitLab';
+    }
+
+    // 权限错误
+    if (stderr.includes('Permission to') && stderr.includes('denied')) {
+      return '无推送权限：请检查是否有仓库写入权限';
+    }
+
+    // 网络错误
+    if (stderr.includes('Could not resolve host')) {
+      return '网络错误：无法解析远程主机';
+    }
+
+    // 返回原始错误的关键信息
+    if (stderr.includes('fatal:')) {
+      const fatalLine = stderr.split('\n').find(line => line.includes('fatal:'));
+      if (fatalLine) {
+        return fatalLine.replace('fatal: ', '').trim();
+      }
+    }
+
+    return '推送失败，请检查网络和凭证配置';
   }
 }

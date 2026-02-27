@@ -3,6 +3,7 @@ import { GitExecutor } from './src/git/executor';
 import { SyncManager } from './src/sync/sync-manager';
 import { StatusBar } from './src/ui/status-bar';
 import { GitSyncSettingTab, GitSyncSettings, DEFAULT_SETTINGS } from './src/ui/settings-tab';
+import { SetupWizardModal } from './src/ui/setup-wizard-modal';
 import type { GitStatus, SyncResult } from './src/git/types';
 
 export default class GitSyncPlugin extends Plugin {
@@ -54,7 +55,7 @@ export default class GitSyncPlugin extends Plugin {
   /**
    * 获取库路径
    */
-  private getVaultPath(): string {
+  getVaultPath(): string {
     return (this.app.vault.adapter as any).basePath;
   }
 
@@ -107,8 +108,8 @@ export default class GitSyncPlugin extends Plugin {
     // 初始化命令
     this.addCommand({
       id: 'git-init',
-      name: '初始化仓库',
-      callback: () => this.initRepo()
+      name: '配置 Git 仓库',
+      callback: () => this.openSetupWizard()
     });
   }
 
@@ -299,5 +300,75 @@ export default class GitSyncPlugin extends Plugin {
     } else {
       new Notice(`Git 同步: ${message}`);
     }
+  }
+
+  /**
+   * 打开配置向导
+   */
+  openSetupWizard(): void {
+    new SetupWizardModal(this.app, this).open();
+  }
+
+  /**
+   * 获取远程仓库 URL
+   */
+  async getRemoteUrl(): Promise<string | null> {
+    return await this.git.getRemoteUrl();
+  }
+
+  /**
+   * 检查远程仓库是否存在
+   */
+  async hasRemote(name: string = 'origin'): Promise<boolean> {
+    return await this.git.hasRemote(name);
+  }
+
+  /**
+   * 添加远程仓库
+   */
+  async addRemote(name: string, url: string): Promise<void> {
+    await this.git.addRemote(name, url);
+  }
+
+  /**
+   * 设置远程仓库 URL
+   */
+  async setRemoteUrl(name: string, url: string): Promise<void> {
+    await this.git.setRemoteUrl(name, url);
+  }
+
+  /**
+   * 获取凭证助手配置
+   */
+  async getCredentialHelper(): Promise<string | null> {
+    return await this.git.getCredentialHelper();
+  }
+
+  /**
+   * 获取 Git 用户名
+   */
+  async getUserName(): Promise<string | null> {
+    return await this.git.getUserName();
+  }
+
+  /**
+   * 获取 Git 用户邮箱
+   */
+  async getUserEmail(): Promise<string | null> {
+    return await this.git.getUserEmail();
+  }
+
+  /**
+   * 设置 Git 用户名
+   */
+  async setUserName(name: string): Promise<void> {
+    await this.git.setUserName(name);
+  }
+
+  /**
+   * 设置 Git 用户邮箱
+   */
+  async setUserEmail(email: string): Promise<void> {
+    await this.git.setUserEmail(email);
   }
 }
