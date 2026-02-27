@@ -13,6 +13,9 @@ npm run build    # Production build (outputs main.js)
 
 This is an Obsidian plugin for Git-based vault synchronization. Desktop-only (uses child_process for Git commands).
 
+## Notice 
+AI's response should be in Chinese by default.
+
 ### Core Components
 
 - **main.ts** - Plugin entry point (`GitSyncPlugin` class). Initializes all components, registers commands, handles lifecycle.
