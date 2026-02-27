@@ -12,131 +12,131 @@ export default class GitSyncPlugin extends Plugin {
   private statusBar: StatusBar;
 
   async onload(): Promise<void> {
-    console.log('Loading Git Sync plugin');
+    console.log('加载 Git 同步插件');
 
-    // Load settings
+    // 加载设置
     await this.loadSettings();
 
-    // Initialize git executor
+    // 初始化 Git 执行器
     this.git = new GitExecutor(this.settings.gitPath, this.getVaultPath());
 
-    // Initialize status bar
+    // 初始化状态栏
     this.statusBar = new StatusBar(this);
     this.statusBar.initialize();
 
-    // Initialize sync manager
+    // 初始化同步管理器
     this.syncManager = new SyncManager(this);
     this.syncManager.setStatusCallback((status, message) => {
       this.statusBar.updateStatus(status, message);
     });
 
-    // Add settings tab
+    // 添加设置面板
     this.addSettingTab(new GitSyncSettingTab(this.app, this));
 
-    // Register commands
+    // 注册命令
     this.registerCommands();
 
-    // Add ribbon icon
-    this.addRibbonIcon('git-branch', 'Git Sync', () => {
+    // 添加功能区图标
+    this.addRibbonIcon('git-branch', 'Git 同步', () => {
       this.sync();
     });
 
-    // Initialize sync manager
+    // 初始化同步管理器
     await this.syncManager.initialize();
   }
 
   onunload(): void {
-    console.log('Unloading Git Sync plugin');
+    console.log('卸载 Git 同步插件');
     this.syncManager.dispose();
     this.statusBar.destroy();
   }
 
   /**
-   * Get the vault path
+   * 获取库路径
    */
   private getVaultPath(): string {
     return (this.app.vault.adapter as any).basePath;
   }
 
   /**
-   * Load plugin settings
+   * 加载设置
    */
   async loadSettings(): Promise<void> {
     this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
   }
 
   /**
-   * Save plugin settings
+   * 保存设置
    */
   async saveSettings(): Promise<void> {
     await this.saveData(this.settings);
   }
 
   /**
-   * Register plugin commands
+   * 注册命令
    */
   private registerCommands(): void {
-    // Sync command
+    // 同步命令
     this.addCommand({
       id: 'git-sync',
-      name: 'Sync with remote',
+      name: '同步',
       callback: () => this.sync()
     });
 
-    // Pull command
+    // 拉取命令
     this.addCommand({
       id: 'git-pull',
-      name: 'Pull from remote',
+      name: '拉取更新',
       callback: () => this.pull()
     });
 
-    // Push command
+    // 推送命令
     this.addCommand({
       id: 'git-push',
-      name: 'Commit and push',
+      name: '提交并推送',
       callback: () => this.commitAndPush()
     });
 
-    // Status command
+    // 状态命令
     this.addCommand({
       id: 'git-status',
-      name: 'Show Git status',
+      name: '显示状态',
       callback: () => this.showStatus()
     });
 
-    // Init command
+    // 初始化命令
     this.addCommand({
       id: 'git-init',
-      name: 'Initialize Git repository',
+      name: '初始化仓库',
       callback: () => this.initRepo()
     });
   }
 
   /**
-   * Perform full sync
+   * 执行完整同步
    */
   async sync(): Promise<void> {
     if (this.syncManager.isSyncing()) {
-      this.showNotice('Sync already in progress');
+      this.showNotice('同步正在进行中');
       return;
     }
 
-    this.showNotice('Starting sync...');
+    this.showNotice('开始同步...');
     const result = await this.syncManager.sync();
 
     if (result.success) {
       this.showNotice(result.message);
     } else {
-      this.showNotice(`Sync failed: ${result.message}`, true);
+      this.showNotice(`同步失败: ${result.message}`, true);
     }
   }
 
   /**
-   * Pull from remote
+   * 拉取更新
    */
   async pull(): Promise<void> {
     if (this.syncManager.isSyncing()) {
-      this.showNotice('Sync already in progress');
+      this.showNotice('同步正在进行中');
       return;
     }
 
@@ -145,16 +145,16 @@ export default class GitSyncPlugin extends Plugin {
     if (result.success) {
       this.showNotice(result.message);
     } else {
-      this.showNotice(`Pull failed: ${result.message}`, true);
+      this.showNotice(`拉取失败: ${result.message}`, true);
     }
   }
 
   /**
-   * Commit and push
+   * 提交并推送
    */
   async commitAndPush(): Promise<void> {
     if (this.syncManager.isSyncing()) {
-      this.showNotice('Sync already in progress');
+      this.showNotice('同步正在进行中');
       return;
     }
 
@@ -163,84 +163,84 @@ export default class GitSyncPlugin extends Plugin {
     if (result.success) {
       this.showNotice(result.message);
     } else {
-      this.showNotice(`Push failed: ${result.message}`, true);
+      this.showNotice(`推送失败: ${result.message}`, true);
     }
   }
 
   /**
-   * Show git status
+   * 显示 Git 状态
    */
   async showStatus(): Promise<void> {
     const { available, isRepo, error } = await this.checkGitStatus();
 
     if (!available) {
-      this.showNotice(`Git not available: ${error}`, true);
+      this.showNotice(`Git 不可用: ${error}`, true);
       return;
     }
 
     if (!isRepo) {
-      this.showNotice('Not a git repository. Use "Initialize Git repository" command to create one.', true);
+      this.showNotice('不是 Git 仓库，请使用"初始化仓库"命令创建。', true);
       return;
     }
 
     const status = await this.getGitStatus();
     const lines: string[] = [];
 
-    lines.push(`Branch: ${status.branch}`);
+    lines.push(`分支: ${status.branch}`);
 
     if (status.clean) {
-      lines.push('Status: Clean');
+      lines.push('状态: 干净');
     } else {
       if (status.staged.length > 0) {
-        lines.push(`Staged: ${status.staged.length} files`);
+        lines.push(`已暂存: ${status.staged.length} 个文件`);
       }
       if (status.modified.length > 0) {
-        lines.push(`Modified: ${status.modified.length} files`);
+        lines.push(`已修改: ${status.modified.length} 个文件`);
       }
       if (status.untracked.length > 0) {
-        lines.push(`Untracked: ${status.untracked.length} files`);
+        lines.push(`未跟踪: ${status.untracked.length} 个文件`);
       }
       if (status.conflicts.length > 0) {
-        lines.push(`Conflicts: ${status.conflicts.length} files`);
+        lines.push(`冲突: ${status.conflicts.length} 个文件`);
       }
     }
 
     if (status.ahead > 0) {
-      lines.push(`Ahead: ${status.ahead} commits`);
+      lines.push(`领先: ${status.ahead} 个提交`);
     }
     if (status.behind > 0) {
-      lines.push(`Behind: ${status.behind} commits`);
+      lines.push(`落后: ${status.behind} 个提交`);
     }
 
     this.showNotice(lines.join('\n'));
   }
 
   /**
-   * Initialize repository
+   * 初始化仓库
    */
   async initRepo(): Promise<void> {
     const { isRepo } = await this.checkGitStatus();
 
     if (isRepo) {
-      this.showNotice('Already a git repository');
+      this.showNotice('已经是 Git 仓库');
       return;
     }
 
     try {
       await this.git.init();
-      this.showNotice('Git repository initialized');
+      this.showNotice('Git 仓库已初始化');
     } catch (error: any) {
-      this.showNotice(`Failed to initialize repository: ${error.message}`, true);
+      this.showNotice(`初始化失败: ${error.message}`, true);
     }
   }
 
   /**
-   * Check git status
+   * 检查 Git 状态
    */
   async checkGitStatus(): Promise<{ available: boolean; isRepo: boolean; error?: string }> {
     const available = await this.git.isGitAvailable();
     if (!available) {
-      return { available: false, isRepo: false, error: 'Git is not installed or not found in PATH' };
+      return { available: false, isRepo: false, error: 'Git 未安装或未找到' };
     }
 
     const isRepo = await this.git.isRepo();
@@ -248,35 +248,35 @@ export default class GitSyncPlugin extends Plugin {
   }
 
   /**
-   * Check if git is available
+   * 检查 Git 是否可用
    */
   async isGitAvailable(): Promise<boolean> {
     return await this.git.isGitAvailable();
   }
 
   /**
-   * Check if current directory is a git repository
+   * 检查是否为 Git 仓库
    */
   async isRepo(): Promise<boolean> {
     return await this.git.isRepo();
   }
 
   /**
-   * Get git status
+   * 获取 Git 状态
    */
   async getGitStatus(): Promise<GitStatus> {
     return await this.git.status();
   }
 
   /**
-   * Restart auto sync
+   * 重启自动同步
    */
   restartAutoSync(): void {
     this.syncManager.restartAutoSync();
   }
 
   /**
-   * Update status bar visibility
+   * 更新状态栏可见性
    */
   updateStatusBarVisibility(): void {
     if (this.settings.showStatusBar) {
@@ -287,7 +287,7 @@ export default class GitSyncPlugin extends Plugin {
   }
 
   /**
-   * Show notice (notification)
+   * 显示通知
    */
   private showNotice(message: string, isError: boolean = false): void {
     if (!this.settings.showNotifications) {
@@ -295,9 +295,9 @@ export default class GitSyncPlugin extends Plugin {
     }
 
     if (isError) {
-      new Notice(`Git Sync: ${message}`, 5000);
+      new Notice(`Git 同步: ${message}`, 5000);
     } else {
-      new Notice(`Git Sync: ${message}`);
+      new Notice(`Git 同步: ${message}`);
     }
   }
 }

@@ -406,19 +406,19 @@ var SyncManager = class {
     this.git = new GitExecutor(plugin.settings.gitPath, this.getVaultPath());
   }
   /**
-   * Get the vault path
+   * 获取库路径
    */
   getVaultPath() {
     return this.plugin.app.vault.adapter.basePath;
   }
   /**
-   * Set the status change callback
+   * 设置状态变更回调
    */
   setStatusCallback(callback) {
     this.onStatusChange = callback;
   }
   /**
-   * Update status and notify callback
+   * 更新状态并通知回调
    */
   updateStatus(status, message) {
     if (this.onStatusChange) {
@@ -426,69 +426,69 @@ var SyncManager = class {
     }
   }
   /**
-   * Check if sync is in progress
+   * 检查是否正在同步
    */
   isSyncing() {
     return this.syncLock;
   }
   /**
-   * Check if git is available and repository is initialized
+   * 检查 Git 是否可用且仓库已初始化
    */
   async checkGitStatus() {
     const gitAvailable = await this.git.isGitAvailable();
     if (!gitAvailable) {
-      return { available: false, isRepo: false, error: "Git is not installed or not found in PATH" };
+      return { available: false, isRepo: false, error: "Git \u672A\u5B89\u88C5\u6216\u672A\u627E\u5230" };
     }
     const isRepo = await this.git.isRepo();
     return { available: true, isRepo };
   }
   /**
-   * Initialize repository
+   * 初始化仓库
    */
   async initRepo() {
     await this.git.init();
   }
   /**
-   * Get current git status
+   * 获取 Git 状态
    */
   async getStatus() {
     return await this.git.status();
   }
   /**
-   * Perform a full sync: pull -> commit -> push
+   * 执行完整同步：拉取 → 提交 → 推送
    */
   async sync() {
     if (this.syncLock) {
-      return { success: false, message: "Sync already in progress" };
+      return { success: false, message: "\u540C\u6B65\u6B63\u5728\u8FDB\u884C\u4E2D" };
     }
     this.syncLock = true;
     try {
       const { available, isRepo, error } = await this.checkGitStatus();
       if (!available) {
-        this.updateStatus("error", error || "Git not available");
-        return { success: false, message: error || "Git not available" };
+        this.updateStatus("error", error || "Git \u4E0D\u53EF\u7528");
+        return { success: false, message: error || "Git \u4E0D\u53EF\u7528" };
       }
       if (!isRepo) {
-        this.updateStatus("error", "Not a git repository");
-        return { success: false, message: "Not a git repository. Please initialize a git repository first." };
+        this.updateStatus("error", "\u4E0D\u662F Git \u4ED3\u5E93");
+        return { success: false, message: "\u4E0D\u662F Git \u4ED3\u5E93\uFF0C\u8BF7\u5148\u521D\u59CB\u5316\u3002" };
       }
       if (await this.git.hasConflicts()) {
-        this.updateStatus("conflict", "Merge conflicts detected");
-        return { success: false, message: "Merge conflicts detected. Please resolve them manually.", conflicts: [] };
+        this.updateStatus("conflict", "\u68C0\u6D4B\u5230\u5408\u5E76\u51B2\u7A81");
+        return { success: false, message: "\u68C0\u6D4B\u5230\u5408\u5E76\u51B2\u7A81\uFF0C\u8BF7\u624B\u52A8\u89E3\u51B3\u3002", conflicts: [] };
       }
-      this.updateStatus("pulling", "Pulling changes...");
+      this.updateStatus("pulling", "\u6B63\u5728\u62C9\u53D6\u66F4\u65B0...");
       const pullResult = await this.pullOnly();
       if (!pullResult.success && pullResult.conflicts.length > 0) {
-        this.updateStatus("conflict", "Merge conflicts detected");
-        this.lastSyncResult = { success: false, message: "Merge conflicts after pull", conflicts: pullResult.conflicts };
+        this.updateStatus("conflict", "\u68C0\u6D4B\u5230\u5408\u5E76\u51B2\u7A81");
+        this.lastSyncResult = { success: false, message: "\u62C9\u53D6\u540E\u5B58\u5728\u5408\u5E76\u51B2\u7A81", conflicts: pullResult.conflicts };
         return this.lastSyncResult;
       }
-      this.updateStatus("pushing", "Committing and pushing changes...");
+      this.updateStatus("pushing", "\u6B63\u5728\u63D0\u4EA4\u5E76\u63A8\u9001...");
       const pushResult = await this.commitAndPush();
       if (pushResult.success) {
-        this.updateStatus("success", "Sync completed successfully");
+        this.updateStatus("success", "\u540C\u6B65\u5B8C\u6210");
         this.lastSyncTime = /* @__PURE__ */ new Date();
-        this.lastSyncResult = { success: true, message: "Sync completed", pulled: pullResult.files.length, pushed: pushResult.pushed };
+        this.lastSyncResult = { success: true, message: "\u540C\u6B65\u5B8C\u6210", pulled: pullResult.files.length, pushed: pushResult.pushed };
         return this.lastSyncResult;
       } else {
         this.updateStatus("error", pushResult.message);
@@ -496,7 +496,7 @@ var SyncManager = class {
         return this.lastSyncResult;
       }
     } catch (error) {
-      const message = error.message || "Unknown error during sync";
+      const message = error.message || "\u540C\u6B65\u65F6\u53D1\u751F\u672A\u77E5\u9519\u8BEF";
       this.updateStatus("error", message);
       this.lastSyncResult = { success: false, message };
       return this.lastSyncResult;
@@ -505,33 +505,33 @@ var SyncManager = class {
     }
   }
   /**
-   * Pull changes from remote
+   * 从远程拉取更新
    */
   async pullOnly() {
     try {
       const remote = await this.git.getRemoteName();
       if (!remote) {
-        return { success: true, message: "No remote configured, skipping pull", files: [], conflicts: [] };
+        return { success: true, message: "\u672A\u914D\u7F6E\u8FDC\u7A0B\u4ED3\u5E93\uFF0C\u8DF3\u8FC7\u62C9\u53D6", files: [], conflicts: [] };
       }
       await this.git.fetch();
       const status = await this.git.status();
       if (status.behind === 0) {
-        return { success: true, message: "Already up to date", files: [], conflicts: [] };
+        return { success: true, message: "\u5DF2\u662F\u6700\u65B0", files: [], conflicts: [] };
       }
-      this.updateStatus("pulling", "Pulling changes...");
+      this.updateStatus("pulling", "\u6B63\u5728\u62C9\u53D6\u66F4\u65B0...");
       const result = await this.git.pull();
       return result;
     } catch (error) {
       if (await this.git.hasConflicts()) {
         const conflictFiles = await this.getStatus().then((s) => s.conflicts);
-        this.updateStatus("conflict", "Merge conflicts detected");
-        return { success: false, message: "Merge conflicts detected", files: [], conflicts: conflictFiles };
+        this.updateStatus("conflict", "\u68C0\u6D4B\u5230\u5408\u5E76\u51B2\u7A81");
+        return { success: false, message: "\u68C0\u6D4B\u5230\u5408\u5E76\u51B2\u7A81", files: [], conflicts: conflictFiles };
       }
       throw error;
     }
   }
   /**
-   * Commit all changes and push to remote
+   * 提交所有更改并推送到远程
    */
   async commitAndPush() {
     var _a;
@@ -539,16 +539,16 @@ var SyncManager = class {
       const status = await this.git.status();
       if (status.clean) {
         if (status.ahead > 0) {
-          this.updateStatus("pushing", "Pushing changes...");
+          this.updateStatus("pushing", "\u6B63\u5728\u63A8\u9001...");
           return await this.git.push();
         }
-        return { success: true, message: "Nothing to commit or push", pushed: 0 };
+        return { success: true, message: "\u6CA1\u6709\u9700\u8981\u63D0\u4EA4\u6216\u63A8\u9001\u7684\u5185\u5BB9", pushed: 0 };
       }
       await this.git.addAll();
       const message = generateCommitMessage(this.plugin.settings.commitMessage);
       await this.git.commit(message);
       const hasUpstream = await this.git.hasUpstream();
-      this.updateStatus("pushing", "Pushing changes...");
+      this.updateStatus("pushing", "\u6B63\u5728\u63A8\u9001...");
       if (hasUpstream) {
         return await this.git.push();
       } else {
@@ -566,19 +566,19 @@ var SyncManager = class {
     }
   }
   /**
-   * Get last sync result
+   * 获取上次同步结果
    */
   getLastSyncResult() {
     return this.lastSyncResult;
   }
   /**
-   * Get last sync time
+   * 获取上次同步时间
    */
   getLastSyncTime() {
     return this.lastSyncTime;
   }
   /**
-   * Start automatic sync
+   * 启动自动同步
    */
   startAutoSync() {
     if (this.autoSyncInterval !== null) {
@@ -587,13 +587,13 @@ var SyncManager = class {
     const intervalMs = this.plugin.settings.syncInterval * 60 * 1e3;
     this.autoSyncInterval = window.setInterval(() => {
       this.sync().catch((error) => {
-        console.error("Auto-sync error:", error);
+        console.error("\u81EA\u52A8\u540C\u6B65\u9519\u8BEF:", error);
       });
     }, intervalMs);
     this.plugin.registerInterval(this.autoSyncInterval);
   }
   /**
-   * Stop automatic sync
+   * 停止自动同步
    */
   stopAutoSync() {
     if (this.autoSyncInterval !== null) {
@@ -602,7 +602,7 @@ var SyncManager = class {
     }
   }
   /**
-   * Restart automatic sync (use after settings change)
+   * 重启自动同步（设置变更后使用）
    */
   restartAutoSync() {
     if (this.plugin.settings.autoSync) {
@@ -613,32 +613,32 @@ var SyncManager = class {
     }
   }
   /**
-   * Initialize sync manager
+   * 初始化同步管理器
    */
   async initialize() {
     const { available, isRepo } = await this.checkGitStatus();
     if (!available) {
-      this.updateStatus("error", "Git not available");
+      this.updateStatus("error", "Git \u4E0D\u53EF\u7528");
       return;
     }
     if (!isRepo) {
-      this.updateStatus("error", "Not a git repository");
+      this.updateStatus("error", "\u4E0D\u662F Git \u4ED3\u5E93");
       return;
     }
     if (this.plugin.settings.autoPullOnStart) {
       try {
         await this.pullOnly();
       } catch (error) {
-        console.error("Auto-pull error:", error);
+        console.error("\u81EA\u52A8\u62C9\u53D6\u9519\u8BEF:", error);
       }
     }
     if (this.plugin.settings.autoSync) {
       this.startAutoSync();
     }
-    this.updateStatus("idle", "Ready");
+    this.updateStatus("idle", "\u5C31\u7EEA");
   }
   /**
-   * Dispose the sync manager
+   * 销毁同步管理器
    */
   dispose() {
     this.stopAutoSync();
@@ -655,7 +655,7 @@ var StatusBar = class {
     this.plugin = plugin;
   }
   /**
-   * Initialize the status bar
+   * 初始化状态栏
    */
   initialize() {
     if (!this.plugin.settings.showStatusBar) {
@@ -668,10 +668,10 @@ var StatusBar = class {
     this.statusBarEl.addEventListener("click", () => {
       this.plugin.sync();
     });
-    this.updateStatus("idle", "Ready");
+    this.updateStatus("idle", "\u5C31\u7EEA");
   }
   /**
-   * Update the status bar display
+   * 更新状态栏显示
    */
   updateStatus(status, message) {
     if (!this.statusBarEl || !this.iconEl || !this.textEl) {
@@ -684,52 +684,52 @@ var StatusBar = class {
     switch (status) {
       case "idle":
         (0, import_obsidian.setIcon)(this.iconEl, "git-branch");
-        this.textEl.setText(message || "Ready");
+        this.textEl.setText(message || "\u5C31\u7EEA");
         break;
       case "syncing":
         this.statusBarEl.addClass("syncing");
         (0, import_obsidian.setIcon)(this.iconEl, "sync");
-        this.textEl.setText(message || "Syncing...");
+        this.textEl.setText(message || "\u540C\u6B65\u4E2D...");
         break;
       case "pulling":
         this.statusBarEl.addClass("syncing");
         (0, import_obsidian.setIcon)(this.iconEl, "arrow-down");
-        this.textEl.setText(message || "Pulling...");
+        this.textEl.setText(message || "\u62C9\u53D6\u4E2D...");
         break;
       case "pushing":
         this.statusBarEl.addClass("syncing");
         (0, import_obsidian.setIcon)(this.iconEl, "arrow-up");
-        this.textEl.setText(message || "Pushing...");
+        this.textEl.setText(message || "\u63A8\u9001\u4E2D...");
         break;
       case "committing":
         this.statusBarEl.addClass("syncing");
         (0, import_obsidian.setIcon)(this.iconEl, "check");
-        this.textEl.setText(message || "Committing...");
+        this.textEl.setText(message || "\u63D0\u4EA4\u4E2D...");
         break;
       case "success":
         this.statusBarEl.addClass("success");
         (0, import_obsidian.setIcon)(this.iconEl, "check-circle");
-        this.textEl.setText(message || "Sync complete");
+        this.textEl.setText(message || "\u540C\u6B65\u5B8C\u6210");
         setTimeout(() => {
           if (this.statusBarEl && this.statusBarEl.hasClass("success")) {
-            this.updateStatus("idle", "Ready");
+            this.updateStatus("idle", "\u5C31\u7EEA");
           }
         }, 3e3);
         break;
       case "error":
         this.statusBarEl.addClass("error");
         (0, import_obsidian.setIcon)(this.iconEl, "alert-circle");
-        this.textEl.setText(message || "Error");
+        this.textEl.setText(message || "\u9519\u8BEF");
         break;
       case "conflict":
         this.statusBarEl.addClass("conflict");
         (0, import_obsidian.setIcon)(this.iconEl, "alert-triangle");
-        this.textEl.setText(message || "Conflicts");
+        this.textEl.setText(message || "\u6709\u51B2\u7A81");
         break;
     }
   }
   /**
-   * Show the status bar
+   * 显示状态栏
    */
   show() {
     if (this.statusBarEl) {
@@ -737,7 +737,7 @@ var StatusBar = class {
     }
   }
   /**
-   * Hide the status bar
+   * 隐藏状态栏
    */
   hide() {
     if (this.statusBarEl) {
@@ -745,7 +745,7 @@ var StatusBar = class {
     }
   }
   /**
-   * Remove the status bar
+   * 销毁状态栏
    */
   destroy() {
     if (this.statusBarEl) {
@@ -762,7 +762,7 @@ var import_obsidian2 = require("obsidian");
 var DEFAULT_SETTINGS = {
   autoSync: false,
   syncInterval: 10,
-  commitMessage: "vault backup: {{date}}",
+  commitMessage: "\u5E93\u5907\u4EFD: {{date}}",
   autoPullOnStart: true,
   showStatusBar: true,
   gitPath: "git",
@@ -778,15 +778,15 @@ var GitSyncSettingTab = class extends import_obsidian2.PluginSettingTab {
     const { containerEl } = this;
     containerEl.empty();
     containerEl.addClass("git-sync-settings");
-    containerEl.createEl("h2", { text: "Git Sync Settings" });
+    containerEl.createEl("h2", { text: "Git \u540C\u6B65\u8BBE\u7F6E" });
     this.createStatusSection();
-    containerEl.createEl("h3", { text: "Sync Settings" });
-    new import_obsidian2.Setting(containerEl).setName("Automatic sync").setDesc("Enable automatic synchronization at regular intervals").addToggle((toggle) => toggle.setValue(this.plugin.settings.autoSync).onChange(async (value) => {
+    containerEl.createEl("h3", { text: "\u540C\u6B65\u8BBE\u7F6E" });
+    new import_obsidian2.Setting(containerEl).setName("\u81EA\u52A8\u540C\u6B65").setDesc("\u542F\u7528\u5B9A\u65F6\u81EA\u52A8\u540C\u6B65").addToggle((toggle) => toggle.setValue(this.plugin.settings.autoSync).onChange(async (value) => {
       this.plugin.settings.autoSync = value;
       await this.plugin.saveSettings();
       this.plugin.restartAutoSync();
     }));
-    new import_obsidian2.Setting(containerEl).setName("Sync interval").setDesc("Time between automatic syncs in minutes (minimum 1)").addText((text) => text.setValue(String(this.plugin.settings.syncInterval)).setPlaceholder("10").onChange(async (value) => {
+    new import_obsidian2.Setting(containerEl).setName("\u540C\u6B65\u95F4\u9694").setDesc("\u81EA\u52A8\u540C\u6B65\u7684\u65F6\u95F4\u95F4\u9694\uFF08\u5206\u949F\uFF09").addText((text) => text.setValue(String(this.plugin.settings.syncInterval)).setPlaceholder("10").onChange(async (value) => {
       const num = parseInt(value);
       if (!isNaN(num) && num >= 1) {
         this.plugin.settings.syncInterval = num;
@@ -794,90 +794,90 @@ var GitSyncSettingTab = class extends import_obsidian2.PluginSettingTab {
         this.plugin.restartAutoSync();
       }
     }));
-    new import_obsidian2.Setting(containerEl).setName("Auto pull on start").setDesc("Automatically pull changes when Obsidian starts").addToggle((toggle) => toggle.setValue(this.plugin.settings.autoPullOnStart).onChange(async (value) => {
+    new import_obsidian2.Setting(containerEl).setName("\u542F\u52A8\u65F6\u62C9\u53D6").setDesc("Obsidian \u542F\u52A8\u65F6\u81EA\u52A8\u62C9\u53D6\u8FDC\u7A0B\u66F4\u65B0").addToggle((toggle) => toggle.setValue(this.plugin.settings.autoPullOnStart).onChange(async (value) => {
       this.plugin.settings.autoPullOnStart = value;
       await this.plugin.saveSettings();
     }));
-    containerEl.createEl("h3", { text: "Commit Settings" });
-    new import_obsidian2.Setting(containerEl).setName("Commit message").setDesc("Template for commit messages. Supports: {{date}}, {{datetime}}, {{time}}, {{timestamp}}, {{isoDate}}").addText((text) => text.setValue(this.plugin.settings.commitMessage).setPlaceholder("vault backup: {{date}}").onChange(async (value) => {
+    containerEl.createEl("h3", { text: "\u63D0\u4EA4\u8BBE\u7F6E" });
+    new import_obsidian2.Setting(containerEl).setName("\u63D0\u4EA4\u6D88\u606F").setDesc("\u63D0\u4EA4\u6D88\u606F\u6A21\u677F\uFF0C\u652F\u6301: {{date}}, {{time}}, {{datetime}}").addText((text) => text.setValue(this.plugin.settings.commitMessage).setPlaceholder("\u5E93\u5907\u4EFD: {{date}}").onChange(async (value) => {
       this.plugin.settings.commitMessage = value || DEFAULT_SETTINGS.commitMessage;
       await this.plugin.saveSettings();
     }));
-    containerEl.createEl("h3", { text: "Display Settings" });
-    new import_obsidian2.Setting(containerEl).setName("Show status bar").setDesc("Display sync status in the status bar").addToggle((toggle) => toggle.setValue(this.plugin.settings.showStatusBar).onChange(async (value) => {
+    containerEl.createEl("h3", { text: "\u663E\u793A\u8BBE\u7F6E" });
+    new import_obsidian2.Setting(containerEl).setName("\u663E\u793A\u72B6\u6001\u680F").setDesc("\u5728\u72B6\u6001\u680F\u663E\u793A\u540C\u6B65\u72B6\u6001").addToggle((toggle) => toggle.setValue(this.plugin.settings.showStatusBar).onChange(async (value) => {
       this.plugin.settings.showStatusBar = value;
       await this.plugin.saveSettings();
       this.plugin.updateStatusBarVisibility();
     }));
-    new import_obsidian2.Setting(containerEl).setName("Show notifications").setDesc("Show notifications for sync events").addToggle((toggle) => toggle.setValue(this.plugin.settings.showNotifications).onChange(async (value) => {
+    new import_obsidian2.Setting(containerEl).setName("\u663E\u793A\u901A\u77E5").setDesc("\u663E\u793A\u540C\u6B65\u4E8B\u4EF6\u7684\u901A\u77E5").addToggle((toggle) => toggle.setValue(this.plugin.settings.showNotifications).onChange(async (value) => {
       this.plugin.settings.showNotifications = value;
       await this.plugin.saveSettings();
     }));
-    containerEl.createEl("h3", { text: "Git Settings" });
-    new import_obsidian2.Setting(containerEl).setName("Git path").setDesc('Path to the git executable. Default is "git" which uses system PATH.').addText((text) => text.setValue(this.plugin.settings.gitPath).setPlaceholder("git").onChange(async (value) => {
+    containerEl.createEl("h3", { text: "Git \u8BBE\u7F6E" });
+    new import_obsidian2.Setting(containerEl).setName("Git \u8DEF\u5F84").setDesc("Git \u53EF\u6267\u884C\u6587\u4EF6\u8DEF\u5F84\uFF0C\u9ED8\u8BA4\u4F7F\u7528\u7CFB\u7EDF PATH \u4E2D\u7684 git").addText((text) => text.setValue(this.plugin.settings.gitPath).setPlaceholder("git").onChange(async (value) => {
       this.plugin.settings.gitPath = value || DEFAULT_SETTINGS.gitPath;
       await this.plugin.saveSettings();
     }));
-    containerEl.createEl("h3", { text: "Actions" });
-    new import_obsidian2.Setting(containerEl).setName("Sync now").setDesc("Perform a full sync (pull, commit, push)").addButton((button) => button.setButtonText("Sync").setCta().onClick(async () => {
+    containerEl.createEl("h3", { text: "\u64CD\u4F5C" });
+    new import_obsidian2.Setting(containerEl).setName("\u7ACB\u5373\u540C\u6B65").setDesc("\u6267\u884C\u5B8C\u6574\u540C\u6B65\uFF08\u62C9\u53D6 \u2192 \u63D0\u4EA4 \u2192 \u63A8\u9001\uFF09").addButton((button) => button.setButtonText("\u540C\u6B65").setCta().onClick(async () => {
       await this.plugin.sync();
     }));
-    new import_obsidian2.Setting(containerEl).setName("Pull from remote").setDesc("Pull changes from the remote repository").addButton((button) => button.setButtonText("Pull").onClick(async () => {
+    new import_obsidian2.Setting(containerEl).setName("\u62C9\u53D6\u66F4\u65B0").setDesc("\u4ECE\u8FDC\u7A0B\u4ED3\u5E93\u62C9\u53D6\u66F4\u65B0").addButton((button) => button.setButtonText("\u62C9\u53D6").onClick(async () => {
       await this.plugin.pull();
     }));
-    new import_obsidian2.Setting(containerEl).setName("Commit and push").setDesc("Commit all changes and push to remote").addButton((button) => button.setButtonText("Push").onClick(async () => {
+    new import_obsidian2.Setting(containerEl).setName("\u63D0\u4EA4\u5E76\u63A8\u9001").setDesc("\u63D0\u4EA4\u6240\u6709\u66F4\u6539\u5E76\u63A8\u9001\u5230\u8FDC\u7A0B").addButton((button) => button.setButtonText("\u63A8\u9001").onClick(async () => {
       await this.plugin.commitAndPush();
     }));
-    containerEl.createEl("h3", { text: "Help" });
+    containerEl.createEl("h3", { text: "\u5E2E\u52A9" });
     const helpDiv = containerEl.createDiv();
     helpDiv.innerHTML = `
-      <p>This plugin syncs your vault with a Git repository.</p>
-      <p><strong>Prerequisites:</strong></p>
+      <p>\u6B64\u63D2\u4EF6\u901A\u8FC7 Git \u540C\u6B65\u4F60\u7684\u5E93\u3002</p>
+      <p><strong>\u524D\u7F6E\u6761\u4EF6\uFF1A</strong></p>
       <ul>
-        <li>Git must be installed on your system</li>
-        <li>Your vault must be a Git repository (git init)</li>
-        <li>A remote must be configured (git remote add origin &lt;url&gt;)</li>
-        <li>Git credentials must be set up for push/pull operations</li>
+        <li>\u7CFB\u7EDF\u5DF2\u5B89\u88C5 Git</li>
+        <li>\u5E93\u5DF2\u521D\u59CB\u5316\u4E3A Git \u4ED3\u5E93 (git init)</li>
+        <li>\u5DF2\u914D\u7F6E\u8FDC\u7A0B\u4ED3\u5E93 (git remote add origin &lt;url&gt;)</li>
+        <li>\u5DF2\u914D\u7F6E Git \u51ED\u8BC1</li>
       </ul>
-      <p><strong>Note:</strong> This plugin only works on desktop (Windows, macOS, Linux).</p>
+      <p><strong>\u6CE8\u610F\uFF1A</strong>\u6B64\u63D2\u4EF6\u4EC5\u652F\u6301\u684C\u9762\u7AEF\uFF08Windows\u3001macOS\u3001Linux\uFF09\u3002</p>
     `;
   }
   /**
-   * Create status section
+   * 创建状态区域
    */
   createStatusSection() {
     const { containerEl } = this;
     const statusContainer = containerEl.createDiv({ cls: "status-container" });
-    statusContainer.createEl("h4", { text: "Repository Status" });
+    statusContainer.createEl("h4", { text: "\u4ED3\u5E93\u72B6\u6001" });
     this.checkGitStatus(statusContainer);
   }
   /**
-   * Check and display git status
+   * 检查并显示 Git 状态
    */
   async checkGitStatus(container) {
     const gitAvailable = await this.plugin.isGitAvailable();
     const isRepo = await this.plugin.isRepo();
     const items = [
-      { label: "Git installed", value: gitAvailable ? "Yes" : "No", status: gitAvailable ? "success" : "error" },
-      { label: "Git repository", value: isRepo ? "Yes" : "No", status: isRepo ? "success" : "error" }
+      { label: "Git \u5DF2\u5B89\u88C5", value: gitAvailable ? "\u662F" : "\u5426", status: gitAvailable ? "success" : "error" },
+      { label: "Git \u4ED3\u5E93", value: isRepo ? "\u662F" : "\u5426", status: isRepo ? "success" : "error" }
     ];
     if (isRepo) {
       try {
         const status = await this.plugin.getGitStatus();
         items.push({
-          label: "Current branch",
+          label: "\u5F53\u524D\u5206\u652F",
           value: status.branch,
           status: "normal"
         });
         items.push({
-          label: "Changes",
-          value: status.clean ? "None" : `${status.staged.length + status.modified.length + status.untracked.length} files`,
+          label: "\u66F4\u6539",
+          value: status.clean ? "\u65E0" : `${status.staged.length + status.modified.length + status.untracked.length} \u4E2A\u6587\u4EF6`,
           status: status.clean ? "success" : "warning"
         });
       } catch (error) {
         items.push({
-          label: "Status",
-          value: "Error reading status",
+          label: "\u72B6\u6001",
+          value: "\u8BFB\u53D6\u5931\u8D25",
           status: "error"
         });
       }
@@ -893,7 +893,7 @@ var GitSyncSettingTab = class extends import_obsidian2.PluginSettingTab {
 // main.ts
 var GitSyncPlugin = class extends import_obsidian3.Plugin {
   async onload() {
-    console.log("Loading Git Sync plugin");
+    console.log("\u52A0\u8F7D Git \u540C\u6B65\u63D2\u4EF6");
     await this.loadSettings();
     this.git = new GitExecutor(this.settings.gitPath, this.getVaultPath());
     this.statusBar = new StatusBar(this);
@@ -904,203 +904,203 @@ var GitSyncPlugin = class extends import_obsidian3.Plugin {
     });
     this.addSettingTab(new GitSyncSettingTab(this.app, this));
     this.registerCommands();
-    this.addRibbonIcon("git-branch", "Git Sync", () => {
+    this.addRibbonIcon("git-branch", "Git \u540C\u6B65", () => {
       this.sync();
     });
     await this.syncManager.initialize();
   }
   onunload() {
-    console.log("Unloading Git Sync plugin");
+    console.log("\u5378\u8F7D Git \u540C\u6B65\u63D2\u4EF6");
     this.syncManager.dispose();
     this.statusBar.destroy();
   }
   /**
-   * Get the vault path
+   * 获取库路径
    */
   getVaultPath() {
     return this.app.vault.adapter.basePath;
   }
   /**
-   * Load plugin settings
+   * 加载设置
    */
   async loadSettings() {
     this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
   }
   /**
-   * Save plugin settings
+   * 保存设置
    */
   async saveSettings() {
     await this.saveData(this.settings);
   }
   /**
-   * Register plugin commands
+   * 注册命令
    */
   registerCommands() {
     this.addCommand({
       id: "git-sync",
-      name: "Sync with remote",
+      name: "\u540C\u6B65",
       callback: () => this.sync()
     });
     this.addCommand({
       id: "git-pull",
-      name: "Pull from remote",
+      name: "\u62C9\u53D6\u66F4\u65B0",
       callback: () => this.pull()
     });
     this.addCommand({
       id: "git-push",
-      name: "Commit and push",
+      name: "\u63D0\u4EA4\u5E76\u63A8\u9001",
       callback: () => this.commitAndPush()
     });
     this.addCommand({
       id: "git-status",
-      name: "Show Git status",
+      name: "\u663E\u793A\u72B6\u6001",
       callback: () => this.showStatus()
     });
     this.addCommand({
       id: "git-init",
-      name: "Initialize Git repository",
+      name: "\u521D\u59CB\u5316\u4ED3\u5E93",
       callback: () => this.initRepo()
     });
   }
   /**
-   * Perform full sync
+   * 执行完整同步
    */
   async sync() {
     if (this.syncManager.isSyncing()) {
-      this.showNotice("Sync already in progress");
+      this.showNotice("\u540C\u6B65\u6B63\u5728\u8FDB\u884C\u4E2D");
       return;
     }
-    this.showNotice("Starting sync...");
+    this.showNotice("\u5F00\u59CB\u540C\u6B65...");
     const result = await this.syncManager.sync();
     if (result.success) {
       this.showNotice(result.message);
     } else {
-      this.showNotice(`Sync failed: ${result.message}`, true);
+      this.showNotice(`\u540C\u6B65\u5931\u8D25: ${result.message}`, true);
     }
   }
   /**
-   * Pull from remote
+   * 拉取更新
    */
   async pull() {
     if (this.syncManager.isSyncing()) {
-      this.showNotice("Sync already in progress");
+      this.showNotice("\u540C\u6B65\u6B63\u5728\u8FDB\u884C\u4E2D");
       return;
     }
     const result = await this.syncManager.pullOnly();
     if (result.success) {
       this.showNotice(result.message);
     } else {
-      this.showNotice(`Pull failed: ${result.message}`, true);
+      this.showNotice(`\u62C9\u53D6\u5931\u8D25: ${result.message}`, true);
     }
   }
   /**
-   * Commit and push
+   * 提交并推送
    */
   async commitAndPush() {
     if (this.syncManager.isSyncing()) {
-      this.showNotice("Sync already in progress");
+      this.showNotice("\u540C\u6B65\u6B63\u5728\u8FDB\u884C\u4E2D");
       return;
     }
     const result = await this.syncManager.commitAndPush();
     if (result.success) {
       this.showNotice(result.message);
     } else {
-      this.showNotice(`Push failed: ${result.message}`, true);
+      this.showNotice(`\u63A8\u9001\u5931\u8D25: ${result.message}`, true);
     }
   }
   /**
-   * Show git status
+   * 显示 Git 状态
    */
   async showStatus() {
     const { available, isRepo, error } = await this.checkGitStatus();
     if (!available) {
-      this.showNotice(`Git not available: ${error}`, true);
+      this.showNotice(`Git \u4E0D\u53EF\u7528: ${error}`, true);
       return;
     }
     if (!isRepo) {
-      this.showNotice('Not a git repository. Use "Initialize Git repository" command to create one.', true);
+      this.showNotice('\u4E0D\u662F Git \u4ED3\u5E93\uFF0C\u8BF7\u4F7F\u7528"\u521D\u59CB\u5316\u4ED3\u5E93"\u547D\u4EE4\u521B\u5EFA\u3002', true);
       return;
     }
     const status = await this.getGitStatus();
     const lines = [];
-    lines.push(`Branch: ${status.branch}`);
+    lines.push(`\u5206\u652F: ${status.branch}`);
     if (status.clean) {
-      lines.push("Status: Clean");
+      lines.push("\u72B6\u6001: \u5E72\u51C0");
     } else {
       if (status.staged.length > 0) {
-        lines.push(`Staged: ${status.staged.length} files`);
+        lines.push(`\u5DF2\u6682\u5B58: ${status.staged.length} \u4E2A\u6587\u4EF6`);
       }
       if (status.modified.length > 0) {
-        lines.push(`Modified: ${status.modified.length} files`);
+        lines.push(`\u5DF2\u4FEE\u6539: ${status.modified.length} \u4E2A\u6587\u4EF6`);
       }
       if (status.untracked.length > 0) {
-        lines.push(`Untracked: ${status.untracked.length} files`);
+        lines.push(`\u672A\u8DDF\u8E2A: ${status.untracked.length} \u4E2A\u6587\u4EF6`);
       }
       if (status.conflicts.length > 0) {
-        lines.push(`Conflicts: ${status.conflicts.length} files`);
+        lines.push(`\u51B2\u7A81: ${status.conflicts.length} \u4E2A\u6587\u4EF6`);
       }
     }
     if (status.ahead > 0) {
-      lines.push(`Ahead: ${status.ahead} commits`);
+      lines.push(`\u9886\u5148: ${status.ahead} \u4E2A\u63D0\u4EA4`);
     }
     if (status.behind > 0) {
-      lines.push(`Behind: ${status.behind} commits`);
+      lines.push(`\u843D\u540E: ${status.behind} \u4E2A\u63D0\u4EA4`);
     }
     this.showNotice(lines.join("\n"));
   }
   /**
-   * Initialize repository
+   * 初始化仓库
    */
   async initRepo() {
     const { isRepo } = await this.checkGitStatus();
     if (isRepo) {
-      this.showNotice("Already a git repository");
+      this.showNotice("\u5DF2\u7ECF\u662F Git \u4ED3\u5E93");
       return;
     }
     try {
       await this.git.init();
-      this.showNotice("Git repository initialized");
+      this.showNotice("Git \u4ED3\u5E93\u5DF2\u521D\u59CB\u5316");
     } catch (error) {
-      this.showNotice(`Failed to initialize repository: ${error.message}`, true);
+      this.showNotice(`\u521D\u59CB\u5316\u5931\u8D25: ${error.message}`, true);
     }
   }
   /**
-   * Check git status
+   * 检查 Git 状态
    */
   async checkGitStatus() {
     const available = await this.git.isGitAvailable();
     if (!available) {
-      return { available: false, isRepo: false, error: "Git is not installed or not found in PATH" };
+      return { available: false, isRepo: false, error: "Git \u672A\u5B89\u88C5\u6216\u672A\u627E\u5230" };
     }
     const isRepo = await this.git.isRepo();
     return { available: true, isRepo };
   }
   /**
-   * Check if git is available
+   * 检查 Git 是否可用
    */
   async isGitAvailable() {
     return await this.git.isGitAvailable();
   }
   /**
-   * Check if current directory is a git repository
+   * 检查是否为 Git 仓库
    */
   async isRepo() {
     return await this.git.isRepo();
   }
   /**
-   * Get git status
+   * 获取 Git 状态
    */
   async getGitStatus() {
     return await this.git.status();
   }
   /**
-   * Restart auto sync
+   * 重启自动同步
    */
   restartAutoSync() {
     this.syncManager.restartAutoSync();
   }
   /**
-   * Update status bar visibility
+   * 更新状态栏可见性
    */
   updateStatusBarVisibility() {
     if (this.settings.showStatusBar) {
@@ -1110,16 +1110,16 @@ var GitSyncPlugin = class extends import_obsidian3.Plugin {
     }
   }
   /**
-   * Show notice (notification)
+   * 显示通知
    */
   showNotice(message, isError = false) {
     if (!this.settings.showNotifications) {
       return;
     }
     if (isError) {
-      new import_obsidian3.Notice(`Git Sync: ${message}`, 5e3);
+      new import_obsidian3.Notice(`Git \u540C\u6B65: ${message}`, 5e3);
     } else {
-      new import_obsidian3.Notice(`Git Sync: ${message}`);
+      new import_obsidian3.Notice(`Git \u540C\u6B65: ${message}`);
     }
   }
 };

@@ -4,12 +4,12 @@ import { generateCommitMessage } from '../utils/helpers';
 import type GitSyncPlugin from '../../main';
 
 /**
- * Callback types for sync events
+ * 状态变更回调类型
  */
 export type StatusChangeCallback = (status: SyncStatus, message: string) => void;
 
 /**
- * Manages the Git sync workflow
+ * 同步管理器
  */
 export class SyncManager {
   private git: GitExecutor;
@@ -26,21 +26,21 @@ export class SyncManager {
   }
 
   /**
-   * Get the vault path
+   * 获取库路径
    */
   private getVaultPath(): string {
     return (this.plugin.app.vault.adapter as any).basePath;
   }
 
   /**
-   * Set the status change callback
+   * 设置状态变更回调
    */
   setStatusCallback(callback: StatusChangeCallback): void {
     this.onStatusChange = callback;
   }
 
   /**
-   * Update status and notify callback
+   * 更新状态并通知回调
    */
   private updateStatus(status: SyncStatus, message: string): void {
     if (this.onStatusChange) {
@@ -49,19 +49,19 @@ export class SyncManager {
   }
 
   /**
-   * Check if sync is in progress
+   * 检查是否正在同步
    */
   isSyncing(): boolean {
     return this.syncLock;
   }
 
   /**
-   * Check if git is available and repository is initialized
+   * 检查 Git 是否可用且仓库已初始化
    */
   async checkGitStatus(): Promise<{ available: boolean; isRepo: boolean; error?: string }> {
     const gitAvailable = await this.git.isGitAvailable();
     if (!gitAvailable) {
-      return { available: false, isRepo: false, error: 'Git is not installed or not found in PATH' };
+      return { available: false, isRepo: false, error: 'Git 未安装或未找到' };
     }
 
     const isRepo = await this.git.isRepo();
@@ -69,66 +69,66 @@ export class SyncManager {
   }
 
   /**
-   * Initialize repository
+   * 初始化仓库
    */
   async initRepo(): Promise<void> {
     await this.git.init();
   }
 
   /**
-   * Get current git status
+   * 获取 Git 状态
    */
   async getStatus(): Promise<GitStatus> {
     return await this.git.status();
   }
 
   /**
-   * Perform a full sync: pull -> commit -> push
+   * 执行完整同步：拉取 → 提交 → 推送
    */
   async sync(): Promise<SyncResult> {
     if (this.syncLock) {
-      return { success: false, message: 'Sync already in progress' };
+      return { success: false, message: '同步正在进行中' };
     }
 
     this.syncLock = true;
 
     try {
-      // Check git availability
+      // 检查 Git 可用性
       const { available, isRepo, error } = await this.checkGitStatus();
       if (!available) {
-        this.updateStatus('error', error || 'Git not available');
-        return { success: false, message: error || 'Git not available' };
+        this.updateStatus('error', error || 'Git 不可用');
+        return { success: false, message: error || 'Git 不可用' };
       }
 
       if (!isRepo) {
-        this.updateStatus('error', 'Not a git repository');
-        return { success: false, message: 'Not a git repository. Please initialize a git repository first.' };
+        this.updateStatus('error', '不是 Git 仓库');
+        return { success: false, message: '不是 Git 仓库，请先初始化。' };
       }
 
-      // Check for conflicts
+      // 检查冲突
       if (await this.git.hasConflicts()) {
-        this.updateStatus('conflict', 'Merge conflicts detected');
-        return { success: false, message: 'Merge conflicts detected. Please resolve them manually.', conflicts: [] };
+        this.updateStatus('conflict', '检测到合并冲突');
+        return { success: false, message: '检测到合并冲突，请手动解决。', conflicts: [] };
       }
 
-      // Pull changes
-      this.updateStatus('pulling', 'Pulling changes...');
+      // 拉取更新
+      this.updateStatus('pulling', '正在拉取更新...');
       const pullResult = await this.pullOnly();
 
       if (!pullResult.success && pullResult.conflicts.length > 0) {
-        this.updateStatus('conflict', 'Merge conflicts detected');
-        this.lastSyncResult = { success: false, message: 'Merge conflicts after pull', conflicts: pullResult.conflicts };
+        this.updateStatus('conflict', '检测到合并冲突');
+        this.lastSyncResult = { success: false, message: '拉取后存在合并冲突', conflicts: pullResult.conflicts };
         return this.lastSyncResult;
       }
 
-      // Commit and push
-      this.updateStatus('pushing', 'Committing and pushing changes...');
+      // 提交并推送
+      this.updateStatus('pushing', '正在提交并推送...');
       const pushResult = await this.commitAndPush();
 
       if (pushResult.success) {
-        this.updateStatus('success', 'Sync completed successfully');
+        this.updateStatus('success', '同步完成');
         this.lastSyncTime = new Date();
-        this.lastSyncResult = { success: true, message: 'Sync completed', pulled: pullResult.files.length, pushed: pushResult.pushed };
+        this.lastSyncResult = { success: true, message: '同步完成', pulled: pullResult.files.length, pushed: pushResult.pushed };
         return this.lastSyncResult;
       } else {
         this.updateStatus('error', pushResult.message);
@@ -136,7 +136,7 @@ export class SyncManager {
         return this.lastSyncResult;
       }
     } catch (error: any) {
-      const message = error.message || 'Unknown error during sync';
+      const message = error.message || '同步时发生未知错误';
       this.updateStatus('error', message);
       this.lastSyncResult = { success: false, message };
       return this.lastSyncResult;
@@ -146,36 +146,36 @@ export class SyncManager {
   }
 
   /**
-   * Pull changes from remote
+   * 从远程拉取更新
    */
   async pullOnly(): Promise<PullResult> {
     try {
-      // Check if remote exists
+      // 检查是否有远程仓库
       const remote = await this.git.getRemoteName();
       if (!remote) {
-        return { success: true, message: 'No remote configured, skipping pull', files: [], conflicts: [] };
+        return { success: true, message: '未配置远程仓库，跳过拉取', files: [], conflicts: [] };
       }
 
-      // Fetch first
+      // 先获取
       await this.git.fetch();
 
-      // Check if we're behind
+      // 检查是否落后
       const status = await this.git.status();
       if (status.behind === 0) {
-        return { success: true, message: 'Already up to date', files: [], conflicts: [] };
+        return { success: true, message: '已是最新', files: [], conflicts: [] };
       }
 
-      // Pull
-      this.updateStatus('pulling', 'Pulling changes...');
+      // 拉取
+      this.updateStatus('pulling', '正在拉取更新...');
       const result = await this.git.pull();
 
       return result;
     } catch (error: any) {
-      // Check for conflicts
+      // 检查冲突
       if (await this.git.hasConflicts()) {
         const conflictFiles = await this.getStatus().then(s => s.conflicts);
-        this.updateStatus('conflict', 'Merge conflicts detected');
-        return { success: false, message: 'Merge conflicts detected', files: [], conflicts: conflictFiles };
+        this.updateStatus('conflict', '检测到合并冲突');
+        return { success: false, message: '检测到合并冲突', files: [], conflicts: conflictFiles };
       }
 
       throw error;
@@ -183,32 +183,32 @@ export class SyncManager {
   }
 
   /**
-   * Commit all changes and push to remote
+   * 提交所有更改并推送到远程
    */
   async commitAndPush(): Promise<PushResult> {
     try {
-      // Get status
+      // 获取状态
       const status = await this.git.status();
 
       if (status.clean) {
-        // Nothing to commit, just push if we have commits
+        // 无需提交，直接推送
         if (status.ahead > 0) {
-          this.updateStatus('pushing', 'Pushing changes...');
+          this.updateStatus('pushing', '正在推送...');
           return await this.git.push();
         }
-        return { success: true, message: 'Nothing to commit or push', pushed: 0 };
+        return { success: true, message: '没有需要提交或推送的内容', pushed: 0 };
       }
 
-      // Add all changes
+      // 添加所有更改
       await this.git.addAll();
 
-      // Commit
+      // 提交
       const message = generateCommitMessage(this.plugin.settings.commitMessage);
       await this.git.commit(message);
 
-      // Push
+      // 推送
       const hasUpstream = await this.git.hasUpstream();
-      this.updateStatus('pushing', 'Pushing changes...');
+      this.updateStatus('pushing', '正在推送...');
 
       if (hasUpstream) {
         return await this.git.push();
@@ -216,9 +216,9 @@ export class SyncManager {
         return await this.git.pushWithUpstream();
       }
     } catch (error: any) {
-      // Check if it's "nothing to commit"
+      // 检查是否是"没有内容需要提交"
       if (error.stdout?.includes('nothing to commit')) {
-        // Try to push anyway
+        // 尝试推送
         try {
           return await this.git.push();
         } catch (pushError: any) {
@@ -230,21 +230,21 @@ export class SyncManager {
   }
 
   /**
-   * Get last sync result
+   * 获取上次同步结果
    */
   getLastSyncResult(): SyncResult | null {
     return this.lastSyncResult;
   }
 
   /**
-   * Get last sync time
+   * 获取上次同步时间
    */
   getLastSyncTime(): Date | null {
     return this.lastSyncTime;
   }
 
   /**
-   * Start automatic sync
+   * 启动自动同步
    */
   startAutoSync(): void {
     if (this.autoSyncInterval !== null) {
@@ -254,16 +254,16 @@ export class SyncManager {
     const intervalMs = this.plugin.settings.syncInterval * 60 * 1000;
     this.autoSyncInterval = window.setInterval(() => {
       this.sync().catch(error => {
-        console.error('Auto-sync error:', error);
+        console.error('自动同步错误:', error);
       });
     }, intervalMs);
 
-    // Register for cleanup
+    // 注册清理
     this.plugin.registerInterval(this.autoSyncInterval);
   }
 
   /**
-   * Stop automatic sync
+   * 停止自动同步
    */
   stopAutoSync(): void {
     if (this.autoSyncInterval !== null) {
@@ -273,7 +273,7 @@ export class SyncManager {
   }
 
   /**
-   * Restart automatic sync (use after settings change)
+   * 重启自动同步（设置变更后使用）
    */
   restartAutoSync(): void {
     if (this.plugin.settings.autoSync) {
@@ -285,40 +285,40 @@ export class SyncManager {
   }
 
   /**
-   * Initialize sync manager
+   * 初始化同步管理器
    */
   async initialize(): Promise<void> {
     const { available, isRepo } = await this.checkGitStatus();
 
     if (!available) {
-      this.updateStatus('error', 'Git not available');
+      this.updateStatus('error', 'Git 不可用');
       return;
     }
 
     if (!isRepo) {
-      this.updateStatus('error', 'Not a git repository');
+      this.updateStatus('error', '不是 Git 仓库');
       return;
     }
 
-    // Auto pull on start if enabled
+    // 启动时自动拉取
     if (this.plugin.settings.autoPullOnStart) {
       try {
         await this.pullOnly();
       } catch (error) {
-        console.error('Auto-pull error:', error);
+        console.error('自动拉取错误:', error);
       }
     }
 
-    // Start auto sync if enabled
+    // 启动自动同步
     if (this.plugin.settings.autoSync) {
       this.startAutoSync();
     }
 
-    this.updateStatus('idle', 'Ready');
+    this.updateStatus('idle', '就绪');
   }
 
   /**
-   * Dispose the sync manager
+   * 销毁同步管理器
    */
   dispose(): void {
     this.stopAutoSync();

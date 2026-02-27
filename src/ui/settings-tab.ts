@@ -2,7 +2,7 @@ import { App, PluginSettingTab, Setting, Notice } from 'obsidian';
 import type GitSyncPlugin from '../../main';
 
 /**
- * Plugin settings interface
+ * 插件设置接口
  */
 export interface GitSyncSettings {
   autoSync: boolean;
@@ -16,12 +16,12 @@ export interface GitSyncSettings {
 }
 
 /**
- * Default settings
+ * 默认设置
  */
 export const DEFAULT_SETTINGS: GitSyncSettings = {
   autoSync: false,
   syncInterval: 10,
-  commitMessage: 'vault backup: {{date}}',
+  commitMessage: '库备份: {{date}}',
   autoPullOnStart: true,
   showStatusBar: true,
   gitPath: 'git',
@@ -30,7 +30,7 @@ export const DEFAULT_SETTINGS: GitSyncSettings = {
 };
 
 /**
- * Settings tab for the plugin
+ * 设置面板
  */
 export class GitSyncSettingTab extends PluginSettingTab {
   private plugin: GitSyncPlugin;
@@ -45,18 +45,18 @@ export class GitSyncSettingTab extends PluginSettingTab {
     containerEl.empty();
     containerEl.addClass('git-sync-settings');
 
-    // Header
-    containerEl.createEl('h2', { text: 'Git Sync Settings' });
+    // 标题
+    containerEl.createEl('h2', { text: 'Git 同步设置' });
 
-    // Status section
+    // 仓库状态
     this.createStatusSection();
 
-    // Sync settings
-    containerEl.createEl('h3', { text: 'Sync Settings' });
+    // 同步设置
+    containerEl.createEl('h3', { text: '同步设置' });
 
     new Setting(containerEl)
-      .setName('Automatic sync')
-      .setDesc('Enable automatic synchronization at regular intervals')
+      .setName('自动同步')
+      .setDesc('启用定时自动同步')
       .addToggle(toggle => toggle
         .setValue(this.plugin.settings.autoSync)
         .onChange(async (value) => {
@@ -66,8 +66,8 @@ export class GitSyncSettingTab extends PluginSettingTab {
         }));
 
     new Setting(containerEl)
-      .setName('Sync interval')
-      .setDesc('Time between automatic syncs in minutes (minimum 1)')
+      .setName('同步间隔')
+      .setDesc('自动同步的时间间隔（分钟）')
       .addText(text => text
         .setValue(String(this.plugin.settings.syncInterval))
         .setPlaceholder('10')
@@ -81,8 +81,8 @@ export class GitSyncSettingTab extends PluginSettingTab {
         }));
 
     new Setting(containerEl)
-      .setName('Auto pull on start')
-      .setDesc('Automatically pull changes when Obsidian starts')
+      .setName('启动时拉取')
+      .setDesc('Obsidian 启动时自动拉取远程更新')
       .addToggle(toggle => toggle
         .setValue(this.plugin.settings.autoPullOnStart)
         .onChange(async (value) => {
@@ -90,26 +90,26 @@ export class GitSyncSettingTab extends PluginSettingTab {
           await this.plugin.saveSettings();
         }));
 
-    // Commit settings
-    containerEl.createEl('h3', { text: 'Commit Settings' });
+    // 提交设置
+    containerEl.createEl('h3', { text: '提交设置' });
 
     new Setting(containerEl)
-      .setName('Commit message')
-      .setDesc('Template for commit messages. Supports: {{date}}, {{datetime}}, {{time}}, {{timestamp}}, {{isoDate}}')
+      .setName('提交消息')
+      .setDesc('提交消息模板，支持: {{date}}, {{time}}, {{datetime}}')
       .addText(text => text
         .setValue(this.plugin.settings.commitMessage)
-        .setPlaceholder('vault backup: {{date}}')
+        .setPlaceholder('库备份: {{date}}')
         .onChange(async (value) => {
           this.plugin.settings.commitMessage = value || DEFAULT_SETTINGS.commitMessage;
           await this.plugin.saveSettings();
         }));
 
-    // Display settings
-    containerEl.createEl('h3', { text: 'Display Settings' });
+    // 显示设置
+    containerEl.createEl('h3', { text: '显示设置' });
 
     new Setting(containerEl)
-      .setName('Show status bar')
-      .setDesc('Display sync status in the status bar')
+      .setName('显示状态栏')
+      .setDesc('在状态栏显示同步状态')
       .addToggle(toggle => toggle
         .setValue(this.plugin.settings.showStatusBar)
         .onChange(async (value) => {
@@ -119,8 +119,8 @@ export class GitSyncSettingTab extends PluginSettingTab {
         }));
 
     new Setting(containerEl)
-      .setName('Show notifications')
-      .setDesc('Show notifications for sync events')
+      .setName('显示通知')
+      .setDesc('显示同步事件的通知')
       .addToggle(toggle => toggle
         .setValue(this.plugin.settings.showNotifications)
         .onChange(async (value) => {
@@ -128,12 +128,12 @@ export class GitSyncSettingTab extends PluginSettingTab {
           await this.plugin.saveSettings();
         }));
 
-    // Git settings
-    containerEl.createEl('h3', { text: 'Git Settings' });
+    // Git设置
+    containerEl.createEl('h3', { text: 'Git 设置' });
 
     new Setting(containerEl)
-      .setName('Git path')
-      .setDesc('Path to the git executable. Default is "git" which uses system PATH.')
+      .setName('Git 路径')
+      .setDesc('Git 可执行文件路径，默认使用系统 PATH 中的 git')
       .addText(text => text
         .setValue(this.plugin.settings.gitPath)
         .setPlaceholder('git')
@@ -142,96 +142,95 @@ export class GitSyncSettingTab extends PluginSettingTab {
           await this.plugin.saveSettings();
         }));
 
-    // Actions
-    containerEl.createEl('h3', { text: 'Actions' });
+    // 操作
+    containerEl.createEl('h3', { text: '操作' });
 
     new Setting(containerEl)
-      .setName('Sync now')
-      .setDesc('Perform a full sync (pull, commit, push)')
+      .setName('立即同步')
+      .setDesc('执行完整同步（拉取 → 提交 → 推送）')
       .addButton(button => button
-        .setButtonText('Sync')
+        .setButtonText('同步')
         .setCta()
         .onClick(async () => {
           await this.plugin.sync();
         }));
 
     new Setting(containerEl)
-      .setName('Pull from remote')
-      .setDesc('Pull changes from the remote repository')
+      .setName('拉取更新')
+      .setDesc('从远程仓库拉取更新')
       .addButton(button => button
-        .setButtonText('Pull')
+        .setButtonText('拉取')
         .onClick(async () => {
           await this.plugin.pull();
         }));
 
     new Setting(containerEl)
-      .setName('Commit and push')
-      .setDesc('Commit all changes and push to remote')
+      .setName('提交并推送')
+      .setDesc('提交所有更改并推送到远程')
       .addButton(button => button
-        .setButtonText('Push')
+        .setButtonText('推送')
         .onClick(async () => {
           await this.plugin.commitAndPush();
         }));
 
-    // Help section
-    containerEl.createEl('h3', { text: 'Help' });
+    // 帮助
+    containerEl.createEl('h3', { text: '帮助' });
 
     const helpDiv = containerEl.createDiv();
     helpDiv.innerHTML = `
-      <p>This plugin syncs your vault with a Git repository.</p>
-      <p><strong>Prerequisites:</strong></p>
+      <p>此插件通过 Git 同步你的库。</p>
+      <p><strong>前置条件：</strong></p>
       <ul>
-        <li>Git must be installed on your system</li>
-        <li>Your vault must be a Git repository (git init)</li>
-        <li>A remote must be configured (git remote add origin &lt;url&gt;)</li>
-        <li>Git credentials must be set up for push/pull operations</li>
+        <li>系统已安装 Git</li>
+        <li>库已初始化为 Git 仓库 (git init)</li>
+        <li>已配置远程仓库 (git remote add origin &lt;url&gt;)</li>
+        <li>已配置 Git 凭证</li>
       </ul>
-      <p><strong>Note:</strong> This plugin only works on desktop (Windows, macOS, Linux).</p>
+      <p><strong>注意：</strong>此插件仅支持桌面端（Windows、macOS、Linux）。</p>
     `;
   }
 
   /**
-   * Create status section
+   * 创建状态区域
    */
   private createStatusSection(): void {
     const { containerEl } = this;
 
     const statusContainer = containerEl.createDiv({ cls: 'status-container' });
-    statusContainer.createEl('h4', { text: 'Repository Status' });
+    statusContainer.createEl('h4', { text: '仓库状态' });
 
-    // Check git status asynchronously
     this.checkGitStatus(statusContainer);
   }
 
   /**
-   * Check and display git status
+   * 检查并显示 Git 状态
    */
   private async checkGitStatus(container: HTMLElement): Promise<void> {
     const gitAvailable = await this.plugin.isGitAvailable();
     const isRepo = await this.plugin.isRepo();
 
     const items = [
-      { label: 'Git installed', value: gitAvailable ? 'Yes' : 'No', status: gitAvailable ? 'success' : 'error' },
-      { label: 'Git repository', value: isRepo ? 'Yes' : 'No', status: isRepo ? 'success' : 'error' },
+      { label: 'Git 已安装', value: gitAvailable ? '是' : '否', status: gitAvailable ? 'success' : 'error' },
+      { label: 'Git 仓库', value: isRepo ? '是' : '否', status: isRepo ? 'success' : 'error' },
     ];
 
     if (isRepo) {
       try {
         const status = await this.plugin.getGitStatus();
         items.push({
-          label: 'Current branch',
+          label: '当前分支',
           value: status.branch,
           status: 'normal'
         });
         items.push({
-          label: 'Changes',
-          value: status.clean ? 'None' : `${status.staged.length + status.modified.length + status.untracked.length} files`,
+          label: '更改',
+          value: status.clean ? '无' : `${status.staged.length + status.modified.length + status.untracked.length} 个文件`,
           status: status.clean ? 'success' : 'warning'
         });
       } catch (error) {
         items.push({
-          label: 'Status',
-          value: 'Error reading status',
+          label: '状态',
+          value: '读取失败',
           status: 'error'
         });
       }
