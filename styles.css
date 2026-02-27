@@ -1,17 +1,18 @@
-/* obsidian-git-sync styles - Cyberpunk Tech Theme */
+/* obsidian-git-sync styles - Modern Tech Theme */
 
 /* ========================================
-   CSS Variables - Tech Theme
+   CSS Variables - Modern Tech Theme
 ======================================== */
 .git-sync-settings {
-  --git-sync-primary: #00d4ff;
-  --git-sync-secondary: #7c3aed;
-  --git-sync-success: #10b981;
-  --git-sync-warning: #f59e0b;
+  --git-sync-primary: #6366f1;
+  --git-sync-accent: #818cf8;
+  --git-sync-success: #22c55e;
+  --git-sync-warning: #eab308;
   --git-sync-error: #ef4444;
-  --git-sync-bg-dark: rgba(15, 23, 42, 0.8);
-  --git-sync-border-glow: rgba(0, 212, 255, 0.3);
-  --git-sync-card-bg: linear-gradient(135deg, rgba(30, 41, 59, 0.9) 0%, rgba(15, 23, 42, 0.95) 100%);
+  --git-sync-bg-elevated: rgba(30, 35, 45, 0.6);
+  --git-sync-border: rgba(99, 102, 241, 0.15);
+  --git-sync-border-hover: rgba(99, 102, 241, 0.3);
+  --git-sync-text-muted: #94a3b8;
 }
 
 /* ========================================
@@ -24,38 +25,35 @@
   padding: 0 10px;
   cursor: pointer;
   border-radius: 4px;
-  transition: all 0.3s ease;
+  transition: background-color 0.2s ease;
 }
 
 .git-sync-status-bar:hover {
   background-color: var(--background-modifier-hover);
-  box-shadow: 0 0 10px var(--git-sync-border-glow);
 }
 
 .git-sync-status-icon {
   display: flex;
   align-items: center;
-  transition: transform 0.3s ease;
+  transition: transform 0.2s ease;
 }
 
 .git-sync-status-bar:hover .git-sync-status-icon {
-  transform: scale(1.1);
+  transform: scale(1.05);
 }
 
 .git-sync-status-text {
   font-size: 12px;
   color: var(--text-muted);
   font-weight: 500;
-  letter-spacing: 0.5px;
 }
 
 .git-sync-status-bar.syncing .git-sync-status-icon {
-  animation: pulse-glow 1.5s ease-in-out infinite;
+  animation: spin 1s linear infinite;
 }
 
 .git-sync-status-bar.syncing .git-sync-status-text {
   color: var(--git-sync-primary);
-  animation: text-flicker 2s ease-in-out infinite;
 }
 
 .git-sync-status-bar.error .git-sync-status-text {
@@ -71,42 +69,25 @@
 }
 
 /* ========================================
-   Settings Page - Tech Theme
+   Settings Page - Modern Style
 ======================================== */
 .git-sync-settings h2 {
-  background: linear-gradient(90deg, var(--git-sync-primary), var(--git-sync-secondary));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  font-size: 2em;
-  font-weight: 700;
+  color: var(--text-normal);
+  font-size: 1.5em;
+  font-weight: 600;
   margin-bottom: 24px;
-  position: relative;
-  padding-bottom: 16px;
-}
-
-.git-sync-settings h2::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  height: 2px;
-  background: linear-gradient(90deg, var(--git-sync-primary), var(--git-sync-secondary), transparent);
-  animation: gradient-flow 3s linear infinite;
-  background-size: 200% 100%;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--background-modifier-border);
 }
 
 .git-sync-settings h3 {
   color: var(--git-sync-primary);
-  font-size: 1.1em;
-  font-weight: 600;
-  margin-top: 32px;
-  margin-bottom: 16px;
-  padding-left: 12px;
-  border-left: 3px solid var(--git-sync-primary);
-  text-transform: uppercase;
-  letter-spacing: 1px;
+  font-size: 0.95em;
+  font-weight: 500;
+  margin-top: 28px;
+  margin-bottom: 12px;
+  padding-left: 10px;
+  border-left: 2px solid var(--git-sync-primary);
 }
 
 .git-sync-settings .setting-item-info {
@@ -126,32 +107,14 @@
 }
 
 /* ========================================
-   Status Container - Tech Card
+   Status Container - Clean Card
 ======================================== */
 .git-sync-settings .status-container {
-  padding: 20px;
-  margin: 16px 0;
-  border-radius: 12px;
-  background: var(--git-sync-card-bg);
-  border: 1px solid var(--git-sync-border-glow);
-  box-shadow:
-    0 4px 20px rgba(0, 0, 0, 0.3),
-    0 0 40px rgba(0, 212, 255, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.05);
-  position: relative;
-  overflow: hidden;
-}
-
-.git-sync-settings .status-container::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(0, 212, 255, 0.1), transparent);
-  animation: scan-line 4s linear infinite;
-  pointer-events: none;
+  padding: 16px;
+  margin: 12px 0;
+  border-radius: 8px;
+  background: var(--git-sync-bg-elevated);
+  border: 1px solid var(--git-sync-border);
 }
 
 .git-sync-settings .status-container h4 {
@@ -159,17 +122,10 @@
   margin-bottom: 16px;
   color: var(--git-sync-primary);
   font-size: 0.9em;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 2px;
+  font-weight: 500;
   display: flex;
   align-items: center;
   gap: 8px;
-}
-
-.git-sync-settings .status-container h4::before {
-  content: '◆';
-  animation: blink 1s ease-in-out infinite;
 }
 
 /* ========================================
@@ -179,153 +135,107 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 0;
-  border-bottom: 1px solid rgba(100, 116, 139, 0.2);
-  transition: all 0.3s ease;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(100, 116, 139, 0.15);
 }
 
 .git-sync-settings .status-item:last-child {
   border-bottom: none;
 }
 
-.git-sync-settings .status-item:hover {
-  background: rgba(0, 212, 255, 0.05);
-  padding-left: 8px;
-  margin-left: -8px;
-  margin-right: -8px;
-  padding-right: 8px;
-  border-radius: 4px;
-}
-
 .git-sync-settings .status-label {
-  color: var(--text-muted);
+  color: var(--git-sync-text-muted);
   font-size: 0.9em;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.git-sync-settings .status-label::before {
-  content: '›';
-  color: var(--git-sync-primary);
-  font-weight: bold;
 }
 
 .git-sync-settings .status-value {
-  font-weight: 600;
-  font-size: 0.9em;
+  font-weight: 500;
+  font-size: 0.85em;
   padding: 2px 10px;
   border-radius: 4px;
   background: rgba(100, 116, 139, 0.1);
-  transition: all 0.3s ease;
 }
 
 .git-sync-settings .status-value.success {
   color: var(--git-sync-success);
-  background: rgba(16, 185, 129, 0.15);
-  box-shadow: 0 0 10px rgba(16, 185, 129, 0.2);
+  background: rgba(34, 197, 94, 0.1);
 }
 
 .git-sync-settings .status-value.error {
   color: var(--git-sync-error);
-  background: rgba(239, 68, 68, 0.15);
-  box-shadow: 0 0 10px rgba(239, 68, 68, 0.2);
+  background: rgba(239, 68, 68, 0.1);
 }
 
 .git-sync-settings .status-value.warning {
   color: var(--git-sync-warning);
-  background: rgba(245, 158, 11, 0.15);
-  box-shadow: 0 0 10px rgba(245, 158, 11, 0.2);
+  background: rgba(234, 179, 8, 0.1);
 }
 
 /* ========================================
-   Buttons - Tech Style
+   Buttons - Flat Style
 ======================================== */
 .git-sync-settings .setting-item-control button {
-  background: linear-gradient(135deg, rgba(0, 212, 255, 0.2) 0%, rgba(124, 58, 237, 0.2) 100%);
-  border: 1px solid var(--git-sync-primary);
+  background: transparent;
+  border: 1px solid var(--git-sync-border);
   color: var(--git-sync-primary);
-  padding: 8px 16px;
   border-radius: 6px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  font-size: 0.8em;
-  transition: all 0.3s ease;
+  padding: 6px 14px;
+  font-weight: 500;
+  font-size: 0.85em;
+  transition: all 0.2s ease;
   cursor: pointer;
-  position: relative;
-  overflow: hidden;
-}
-
-.git-sync-settings .setting-item-control button::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(0, 212, 255, 0.3), transparent);
-  transition: left 0.5s ease;
 }
 
 .git-sync-settings .setting-item-control button:hover {
-  background: linear-gradient(135deg, rgba(0, 212, 255, 0.4) 0%, rgba(124, 58, 237, 0.4) 100%);
-  box-shadow: 0 0 20px rgba(0, 212, 255, 0.4);
-  transform: translateY(-2px);
-}
-
-.git-sync-settings .setting-item-control button:hover::before {
-  left: 100%;
+  background: rgba(99, 102, 241, 0.08);
+  border-color: var(--git-sync-border-hover);
 }
 
 .git-sync-settings .setting-item-control button.mod-cta {
-  background: linear-gradient(135deg, var(--git-sync-primary) 0%, var(--git-sync-secondary) 100%);
+  background: var(--git-sync-primary);
   color: white;
   border: none;
-  box-shadow: 0 4px 15px rgba(0, 212, 255, 0.3);
 }
 
 .git-sync-settings .setting-item-control button.mod-cta:hover {
-  box-shadow: 0 6px 25px rgba(0, 212, 255, 0.5);
+  background: var(--git-sync-accent);
 }
 
 /* ========================================
-   Toggle Switch - Tech Style
+   Toggle Switch
 ======================================== */
 .git-sync-settings .setting-item-control .checkbox-container {
   background: rgba(100, 116, 139, 0.3);
-  border: 1px solid rgba(100, 116, 139, 0.5);
+  border: 1px solid rgba(100, 116, 139, 0.3);
   border-radius: 20px;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
 }
 
 .git-sync-settings .setting-item-control .checkbox-container.is-enabled {
-  background: linear-gradient(135deg, var(--git-sync-primary), var(--git-sync-secondary));
+  background: var(--git-sync-primary);
   border-color: var(--git-sync-primary);
-  box-shadow: 0 0 15px rgba(0, 212, 255, 0.4);
 }
 
 .git-sync-settings .setting-item-control .checkbox-container::after {
   background: white;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
 }
 
 /* ========================================
-   Text Input - Tech Style
+   Text Input
 ======================================== */
 .git-sync-settings .setting-item-control input[type="text"] {
-  background: rgba(15, 23, 42, 0.8);
-  border: 1px solid rgba(100, 116, 139, 0.3);
+  background: var(--background-modifier-form-field);
+  border: 1px solid var(--background-modifier-border);
   border-radius: 6px;
-  padding: 8px 12px;
+  padding: 6px 10px;
   color: var(--text-normal);
   font-size: 0.9em;
-  transition: all 0.3s ease;
+  transition: border-color 0.2s ease;
 }
 
 .git-sync-settings .setting-item-control input[type="text"]:focus {
   border-color: var(--git-sync-primary);
-  box-shadow: 0 0 15px rgba(0, 212, 255, 0.3);
   outline: none;
 }
 
@@ -334,15 +244,14 @@
 }
 
 /* ========================================
-   Help Section - Tech Style
+   Help Section
 ======================================== */
 .git-sync-settings .git-sync-help {
-  padding: 20px;
+  padding: 16px;
   margin-top: 20px;
-  border-radius: 12px;
-  background: var(--git-sync-card-bg);
-  border: 1px solid rgba(124, 58, 237, 0.3);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  background: var(--git-sync-bg-elevated);
+  border: 1px solid var(--git-sync-border);
 }
 
 .git-sync-settings .git-sync-help p {
@@ -351,7 +260,7 @@
 }
 
 .git-sync-settings .git-sync-help strong {
-  color: var(--git-sync-primary);
+  color: var(--git-sync-accent);
 }
 
 .git-sync-settings .git-sync-help ul,
@@ -361,8 +270,7 @@
 
 .git-sync-settings .git-sync-help li {
   color: var(--text-muted);
-  margin: 8px 0;
-  position: relative;
+  margin: 6px 0;
 }
 
 .git-sync-settings .git-sync-help ul li::marker {
@@ -370,47 +278,42 @@
 }
 
 .git-sync-settings .git-sync-help ol li::marker {
-  color: var(--git-sync-secondary);
-  font-weight: bold;
+  color: var(--git-sync-accent);
 }
 
 .git-sync-settings .git-sync-help code {
-  background: rgba(0, 212, 255, 0.1);
+  background: rgba(99, 102, 241, 0.1);
   color: var(--git-sync-primary);
-  padding: 2px 8px;
+  padding: 2px 6px;
   border-radius: 4px;
   font-family: 'JetBrains Mono', 'Fira Code', monospace;
   font-size: 0.85em;
-  border: 1px solid rgba(0, 212, 255, 0.2);
 }
 
 /* ========================================
-   Setup Wizard Modal - Tech Theme
+   Setup Wizard Modal
 ======================================== */
 .setup-wizard-modal {
   padding: 24px;
 }
 
 .setup-wizard-modal h2 {
-  background: linear-gradient(90deg, var(--git-sync-primary), var(--git-sync-secondary));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: var(--text-normal);
   margin-bottom: 20px;
 }
 
 .setup-wizard-modal h3 {
   color: var(--git-sync-primary);
-  border-left: 3px solid var(--git-sync-primary);
-  padding-left: 12px;
+  border-left: 2px solid var(--git-sync-primary);
+  padding-left: 10px;
   margin: 20px 0;
 }
 
 .setup-success {
   padding: 16px;
   border-radius: 8px;
-  background: rgba(16, 185, 129, 0.1);
-  border: 1px solid rgba(16, 185, 129, 0.3);
+  background: rgba(34, 197, 94, 0.1);
+  border: 1px solid rgba(34, 197, 94, 0.2);
   margin: 16px 0;
 }
 
@@ -423,7 +326,7 @@
   padding: 16px;
   border-radius: 8px;
   background: rgba(239, 68, 68, 0.1);
-  border: 1px solid rgba(239, 68, 68, 0.3);
+  border: 1px solid rgba(239, 68, 68, 0.2);
   margin: 16px 0;
 }
 
@@ -433,10 +336,10 @@
 }
 
 .setup-summary {
-  padding: 20px;
-  border-radius: 12px;
-  background: var(--git-sync-card-bg);
-  border: 1px solid var(--git-sync-border-glow);
+  padding: 16px;
+  border-radius: 8px;
+  background: var(--git-sync-bg-elevated);
+  border: 1px solid var(--git-sync-border);
   margin: 16px 0;
 }
 
@@ -444,7 +347,7 @@
   display: flex;
   justify-content: space-between;
   padding: 8px 0;
-  border-bottom: 1px solid rgba(100, 116, 139, 0.2);
+  border-bottom: 1px solid rgba(100, 116, 139, 0.15);
 }
 
 .setup-summary .summary-item:last-child {
@@ -457,59 +360,23 @@
 
 .setup-summary .summary-value-success {
   color: var(--git-sync-success);
-  font-weight: 600;
+  font-weight: 500;
 }
 
 .setup-summary .summary-value-warning {
   color: var(--git-sync-warning);
-  font-weight: 600;
+  font-weight: 500;
 }
 
 /* ========================================
-   Animations
+   Animations - Minimal
 ======================================== */
-@keyframes pulse-glow {
-  0%, 100% {
-    filter: drop-shadow(0 0 5px var(--git-sync-primary));
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
   }
-  50% {
-    filter: drop-shadow(0 0 15px var(--git-sync-primary));
-  }
-}
-
-@keyframes text-flicker {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.8;
-  }
-}
-
-@keyframes gradient-flow {
-  0% {
-    background-position: 0% 50%;
-  }
-  100% {
-    background-position: 200% 50%;
-  }
-}
-
-@keyframes scan-line {
-  0% {
-    left: -100%;
-  }
-  100% {
-    left: 100%;
-  }
-}
-
-@keyframes blink {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.3;
+  to {
+    transform: rotate(360deg);
   }
 }
 
